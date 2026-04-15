@@ -113,9 +113,28 @@ void Game::ProcessInput()
 
 void Game::Update()
 {
+    // Wait some time until we reach the milliseconds per frame
+    static Uint64 millisecondsPreviousFrame = SDL_GetTicks();
+
+    // Get current milliseconds
+    Uint64 millisecondsCurrent = SDL_GetTicks();
+
+    // Wait some time until the reach the target frame time in milliseconds
+    Uint64 millisecondsFrameTime = millisecondsCurrent - millisecondsPreviousFrame;
+
+    // Only delay execution if we are running too fast
+    if (millisecondsFrameTime < MILLISECONDS_PER_FRAME)
+    {
+        SDL_Delay(static_cast<Uint32>(MILLISECONDS_PER_FRAME - millisecondsFrameTime));
+        millisecondsCurrent = SDL_GetTicks();
+        millisecondsFrameTime = millisecondsCurrent - millisecondsPreviousFrame;
+    }
+
     // Update game objects
     playerPosition.x += playerVelocity.x;
     playerPosition.y += playerVelocity.y;
+
+    millisecondsPreviousFrame = millisecondsCurrent;
 }
 
 void Game::Render()
