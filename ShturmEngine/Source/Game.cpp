@@ -94,6 +94,10 @@ void Game::Update()
 
 void Game::Render()
 {
+    SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255);
+    SDL_RenderClear(_renderer);
+
+    SDL_RenderPresent(_renderer);
 }
 
 void Game::Destroy()
