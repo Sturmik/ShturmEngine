@@ -62,7 +62,7 @@ glm::vec2 playerVelocity;
 void Game::Setup()
 {
     playerPosition = glm::vec2(10.0, 20.0);
-    playerVelocity = glm::vec2(1.0, 1.0);
+    playerVelocity = glm::vec2(50.0, 50.0);
 }
 
 void Game::Run()
@@ -130,10 +130,14 @@ void Game::Update()
         millisecondsFrameTime = millisecondsCurrent - millisecondsPreviousFrame;
     }
 
-    // Update game objects
-    playerPosition.x += playerVelocity.x;
-    playerPosition.y += playerVelocity.y;
+    // Delta time, convert milliseconds to seconds
+    float deltaTime = static_cast<float>(millisecondsFrameTime) / 1000.0;
 
+    // Update game objects
+    playerPosition.x += playerVelocity.x * deltaTime;
+    playerPosition.y += playerVelocity.y * deltaTime;
+
+    // Update previous milliseconds per frame
     millisecondsPreviousFrame = millisecondsCurrent;
 }
 
