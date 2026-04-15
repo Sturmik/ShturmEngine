@@ -4,21 +4,26 @@
 #include <glm/glm.hpp>
 #include <iostream>
 
+#include "Logger/LoggerMacro.h"
+
 Game::Game() : _isRunning(false), _window(nullptr), _renderer(nullptr)
 {
-	std::cout << "Game constructor called!" << std::endl;
+    LOG_DEBUG("I am working only in debug!");
+	LOG_INFO("Game constructor called!");
+    LOG_WARNING("Yeah, I am god! %i", 1);
+    LOG_ERROR("WE ALL GONNA DIE! It is okay, though");
 }
 
 Game::~Game()
 {
-	std::cout << "Game destructor called!" << std::endl;
+    LOG_INFO("Game destructor called!");
 }
 
 void Game::Initialize()
 {
     if (!SDL_Init((SDL_INIT_VIDEO)))
     {
-        std::cerr << "Error initializing SDL: " << SDL_GetError() << std::endl;
+        LOG_ERROR("Error initializing SDL: %s", SDL_GetError());
         return;
     }
 
@@ -32,7 +37,7 @@ void Game::Initialize()
 
     if (!_window)
     {
-        std::cerr <<  "Error creating SDL window: " << SDL_GetError() << std::endl;
+        LOG_ERROR("Error creating SDL window: %s", SDL_GetError());
         return;
     }
 
@@ -49,7 +54,7 @@ void Game::Initialize()
 
     if (!_renderer)
     {
-        std::cerr << "Error creating SDL renderer: %s" << SDL_GetError() << std::endl;
+        LOG_ERROR("Error creating SDL renderer: %s", SDL_GetError());
         return;
     }
 

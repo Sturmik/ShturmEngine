@@ -4,6 +4,9 @@
     <Filter Include="Source">
       <UniqueIdentifier>{b6991fcd-01ae-49a5-9a18-a9fbbdc26b0b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Logger">
+      <UniqueIdentifier>{2a8c58c7-5e48-4547-8bfd-3bcadc561493}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Main.cpp">
@@ -12,10 +15,19 @@
     <ClCompile Include="Source\Game.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Logger\Logger.cpp">
+      <Filter>Source\Logger</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Game.h">
       <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Logger\LoggerMacro.h">
+      <Filter>Source\Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Logger\Logger.h">
+      <Filter>Source\Logger</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
