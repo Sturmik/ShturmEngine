@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-Game::Game()
+Game::Game() : _isRunning(false), _window(nullptr), _renderer(nullptr)
 {
 	std::cout << "Game constructor called!" << std::endl;
 }
@@ -14,20 +14,78 @@ Game::~Game()
 
 void Game::Initialize()
 {
+    if (!SDL_Init((SDL_INIT_VIDEO)))
+    {
+        std::cerr << "Error initializing SDL: " << SDL_GetError() << std::endl;
+        return;
+    }
+
+    _window = SDL_CreateWindow(
+        "ShturmEngine Window",
+        800, 600,
+        0
+    );
+
+    if (!_window)
+    {
+        std::cerr <<  "Error creating SDL window: " << SDL_GetError() << std::endl;
+        return;
+    }
+
+    _renderer = SDL_CreateRenderer(_window, nullptr);
+
+    if (!_renderer)
+    {
+        std::cerr << "Error creating SDL renderer: %s" << SDL_GetError() << std::endl;
+        return;
+    }
+
+    _isRunning = true;
 }
 
 void Game::Run()
 {
+    while (_isRunning)
+    {
+        ProcessInput();
+        Update();
+        Render();
+    }
 }
 
 void Game::ProcessInput()
 {
-	while (true)
-	{
-		ProcessInput();
-		Update();
-		Render();
-	}
+    SDL_Event event;
+    while (SDL_PollEvent(&event))
+    {
+        switch (event.type)
+        {
+            case SDL_EVENT_QUIT:
+            {
+                _isRunning = false;
+            }
+            break;
+
+            case SDL_EVENT_KEY_DOWN:
+            {
+                switch (event.key.scancode)
+                {
+                    case SDL_SCANCODE_ESCAPE:
+                    {
+                        _isRunning = false;
+                    }
+                    break;
+
+                    default:
+                        break;
+                }
+            }
+            break;
+
+            default:
+                break;
+        }
+    }
 }
 
 void Game::Update()
@@ -40,4 +98,17 @@ void Game::Render()
 
 void Game::Destroy()
 {
+    if (_renderer)
+    {
+        SDL_DestroyRenderer(_renderer);
+        _renderer = nullptr;
+    }
+
+    if (_window)
+    {
+        SDL_DestroyWindow(_window);
+        _window = nullptr;
+    }
+
+    SDL_Quit();
 }
