@@ -1,5 +1,7 @@
 #include "Game.h"
 
+#include <SDL3_image/SDL_image.h>
+#include <glm/glm.hpp>
 #include <iostream>
 
 Game::Game() : _isRunning(false), _window(nullptr), _renderer(nullptr)
@@ -54,8 +56,18 @@ void Game::Initialize()
     _isRunning = true;
 }
 
+glm::vec2 playerPosition;
+glm::vec2 playerVelocity;
+
+void Game::Setup()
+{
+    playerPosition = glm::vec2(10.0, 20.0);
+    playerVelocity = glm::vec2(1.0, 1.0);
+}
+
 void Game::Run()
 {
+    Setup();
     while (_isRunning)
     {
         ProcessInput();
@@ -101,12 +113,25 @@ void Game::ProcessInput()
 
 void Game::Update()
 {
+    // Update game objects
+    playerPosition.x += playerVelocity.x;
+    playerPosition.y += playerVelocity.y;
 }
 
 void Game::Render()
 {
-    SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255);
+    SDL_SetRenderDrawColor(_renderer, 21, 21, 21, 255);
     SDL_RenderClear(_renderer);
+
+    // Loads a PNG texture
+    SDL_Surface* surface = IMG_Load("./Assets/Images/tank-tiger-right.png");
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, surface);
+    SDL_DestroySurface(surface);
+
+    // Drawing destination rectangle, where we want to place our texture
+    SDL_FRect destinationRectangle = { playerPosition.x, playerPosition.y, 32, 32 };
+    SDL_RenderTexture(_renderer, texture, nullptr, &destinationRectangle);
+    SDL_DestroyTexture(texture);
 
     SDL_RenderPresent(_renderer);
 }
