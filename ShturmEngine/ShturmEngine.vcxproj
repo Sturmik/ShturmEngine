@@ -97,7 +97,8 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y /D "$(ProjectDir)Externals\SDL3\lib\x86\*.dll" "$(OutDir)"
-xcopy /Y /D "$(ProjectDir)Externals\lua\lib\x86\*.dll" "$(OutDir)"</Command>
+xcopy /Y /D "$(ProjectDir)Externals\lua\lib\x86\*.dll" "$(OutDir)"
+xcopy "$(ProjectDir)Assets" "$(OutDir)Assets" /S /I /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -119,7 +120,8 @@ xcopy /Y /D "$(ProjectDir)Externals\lua\lib\x86\*.dll" "$(OutDir)"</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y /D "$(ProjectDir)Externals\SDL3\lib\x86\*.dll" "$(OutDir)"
-xcopy /Y /D "$(ProjectDir)Externals\lua\lib\x86\*.dll" "$(OutDir)"</Command>
+xcopy /Y /D "$(ProjectDir)Externals\lua\lib\x86\*.dll" "$(OutDir)"
+xcopy "$(ProjectDir)Assets" "$(OutDir)Assets" /S /I /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -139,7 +141,8 @@ xcopy /Y /D "$(ProjectDir)Externals\lua\lib\x86\*.dll" "$(OutDir)"</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y /D "$(ProjectDir)Externals\SDL3\lib\x64\*.dll" "$(OutDir)"
-xcopy /Y /D "$(ProjectDir)Externals\lua\lib\x64\*.dll" "$(OutDir)"</Command>
+xcopy /Y /D "$(ProjectDir)Externals\lua\lib\x64\*.dll" "$(OutDir)"
+xcopy "$(ProjectDir)Assets" "$(OutDir)Assets" /S /I /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -161,7 +164,8 @@ xcopy /Y /D "$(ProjectDir)Externals\lua\lib\x64\*.dll" "$(OutDir)"</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y /D "$(ProjectDir)Externals\SDL3\lib\x64\*.dll" "$(OutDir)"
-xcopy /Y /D "$(ProjectDir)Externals\lua\lib\x64\*.dll" "$(OutDir)"</Command>
+xcopy /Y /D "$(ProjectDir)Externals\lua\lib\x64\*.dll" "$(OutDir)"
+xcopy "$(ProjectDir)Assets" "$(OutDir)Assets" /S /I /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

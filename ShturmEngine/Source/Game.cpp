@@ -8,10 +8,7 @@
 
 Game::Game() : _isRunning(false), _window(nullptr), _renderer(nullptr)
 {
-    LOG_DEBUG("I am working only in debug!");
 	LOG_INFO("Game constructor called!");
-    LOG_WARNING("Yeah, I am god! %i", 1);
-    LOG_ERROR("WE ALL GONNA DIE! It is okay, though");
 }
 
 Game::~Game()

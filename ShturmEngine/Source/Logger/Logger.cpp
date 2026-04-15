@@ -62,31 +62,46 @@ void Logger::Log(LogLevel level,
 
     std::string finalMessage = prefix + messageBuffer;
 
+    // Save log entry
+    LogEntry logEntry = { level, finalMessage };
+    _messages.emplace_back(logEntry);
+
+    std::string coloredFinalMessage = finalMessage;
+
     // Make text green in case of information log
     if (level == LogLevel::Info)
     {
-        finalMessage = "\033[32m" + finalMessage + "\033[0m";
+        coloredFinalMessage = "\033[32m" + finalMessage + "\033[0m";
     }
     // Make text yellow in case of warning level
     if (level == LogLevel::Warning)
     {
-        finalMessage = "\033[33m" + finalMessage + "\033[0m";
+        coloredFinalMessage = "\033[33m" + finalMessage + "\033[0m";
     }
     // Make text red in case of error level
     if (level == LogLevel::Error)
     {
-        finalMessage = "\033[31m" + finalMessage + "\033[0m";
+        coloredFinalMessage = "\033[31m" + finalMessage + "\033[0m";
     }
+    std::cout << coloredFinalMessage << std::endl;
 
     // Thread-safe output
     std::lock_guard<std::mutex> lock(_mutex);
-
-    std::cout << finalMessage << std::endl;
 
     if (_file.is_open())
     {
        _file << finalMessage << std::endl;
     }
+}
+
+const std::vector<LogEntry>& Logger::GetMessages() const
+{
+    return _messages;
+}
+
+Logger::~Logger()
+{
+    Shutdown();
 }
 
 std::string Logger::FormatPrefix(LogLevel level,

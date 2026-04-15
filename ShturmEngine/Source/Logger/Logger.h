@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <mutex>
+#include <vector>
 
 enum class LogLevel
 {
@@ -12,12 +13,18 @@ enum class LogLevel
     Error
 };
 
+struct LogEntry
+{
+    LogLevel logLevel;
+    std::string message;
+};
+
 class Logger
 {
 public:
     static Logger& Get();
 
-    void Initialize(const std::string& filename = "ShturmEngine.log");
+    void Initialize(const std::string& filename = "ShturmEngineLog.txt");
     void Shutdown();
 
     void SetLevel(LogLevel level);
@@ -28,9 +35,11 @@ public:
         const char* function,
         const char* fmt, ...);
 
+    const std::vector<LogEntry>& GetMessages() const;
+
 private:
     Logger() = default;
-    ~Logger() = default;
+    ~Logger();
 
     std::string FormatPrefix(LogLevel level,
         const char* file,
@@ -43,4 +52,6 @@ private:
     std::ofstream _file;
     std::mutex _mutex;
     LogLevel _currentLevel = LogLevel::Debug;
+
+    std::vector<LogEntry> _messages;
 };
