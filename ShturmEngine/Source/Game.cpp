@@ -20,10 +20,12 @@ void Game::Initialize()
         return;
     }
 
+    const size_t WINDOW_WIDTH = 800;
+    const size_t WINDOW_HEIGHT = 600;
     _window = SDL_CreateWindow(
         "ShturmEngine Window",
-        800, 600,
-        0
+        WINDOW_WIDTH, WINDOW_HEIGHT,
+        SDL_WINDOW_RESIZABLE
     );
 
     if (!_window)
@@ -32,7 +34,16 @@ void Game::Initialize()
         return;
     }
 
-    _renderer = SDL_CreateRenderer(_window, nullptr);
+    // Create a property group
+    SDL_PropertiesID props = SDL_CreateProperties();
+    // Set the window where the renderer will draw
+    SDL_SetPointerProperty(props, SDL_PROP_RENDERER_CREATE_WINDOW_POINTER, _window);
+    // Set VSync
+    SDL_SetNumberProperty(props, SDL_PROP_RENDERER_CREATE_PRESENT_VSYNC_NUMBER, 1);
+    // Create the renderer using properties
+    _renderer = SDL_CreateRendererWithProperties(props);
+    // Clean up the properties object
+    SDL_DestroyProperties(props);
 
     if (!_renderer)
     {
