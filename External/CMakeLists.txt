@@ -1,7 +1,5 @@
 # External/CMakeLists.txt
 
-set(EXTERNAL_DIR ${CMAKE_CURRENT_LIST_DIR})
-
 # We want consistent static linking in engine stacks
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
@@ -57,6 +55,12 @@ set(SDLTTF_HARFBUZZ ON CACHE BOOL "" FORCE)
 
 add_subdirectory(SDL3_image)
 
+# ---------------------------- SDL3 mixer ----------------------------
+
+set(SDLMIXER_VENDORED OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(SDL3_mixer)
+
 # ---------------------------- SDL3 ttf ----------------------------
 
 # We explicitly disable vendored mode to match engine graph
@@ -78,3 +82,113 @@ set(GLM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE) 
 
 add_subdirectory(glm)
+
+set(LUA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lua)
+
+set_source_files_properties(
+    ${LUA_DIR}/lapi.c
+    ${LUA_DIR}/lcode.c
+    ${LUA_DIR}/lctype.c
+    ${LUA_DIR}/ldebug.c
+    ${LUA_DIR}/ldo.c
+    ${LUA_DIR}/ldump.c
+    ${LUA_DIR}/lfunc.c
+    ${LUA_DIR}/lgc.c
+    ${LUA_DIR}/llex.c
+    ${LUA_DIR}/lmem.c
+    ${LUA_DIR}/lobject.c
+    ${LUA_DIR}/lopcodes.c
+    ${LUA_DIR}/lparser.c
+    ${LUA_DIR}/lstate.c
+    ${LUA_DIR}/lstring.c
+    ${LUA_DIR}/ltable.c
+    ${LUA_DIR}/ltm.c
+    ${LUA_DIR}/lundump.c
+    ${LUA_DIR}/lvm.c
+    ${LUA_DIR}/lzio.c
+    ${LUA_DIR}/lauxlib.c
+    ${LUA_DIR}/lbaselib.c
+    ${LUA_DIR}/lcorolib.c
+    ${LUA_DIR}/ldblib.c
+    ${LUA_DIR}/liolib.c
+    ${LUA_DIR}/lmathlib.c
+    ${LUA_DIR}/loslib.c
+    ${LUA_DIR}/lstrlib.c
+    ${LUA_DIR}/ltablib.c
+    ${LUA_DIR}/lutf8lib.c
+    ${LUA_DIR}/loadlib.c
+    ${LUA_DIR}/linit.c
+PROPERTIES LANGUAGE C)
+
+add_library(lua STATIC
+    ${LUA_DIR}/lapi.c
+    ${LUA_DIR}/lcode.c
+    ${LUA_DIR}/lctype.c
+    ${LUA_DIR}/ldebug.c
+    ${LUA_DIR}/ldo.c
+    ${LUA_DIR}/ldump.c
+    ${LUA_DIR}/lfunc.c
+    ${LUA_DIR}/lgc.c
+    ${LUA_DIR}/llex.c
+    ${LUA_DIR}/lmem.c
+    ${LUA_DIR}/lobject.c
+    ${LUA_DIR}/lopcodes.c
+    ${LUA_DIR}/lparser.c
+    ${LUA_DIR}/lstate.c
+    ${LUA_DIR}/lstring.c
+    ${LUA_DIR}/ltable.c
+    ${LUA_DIR}/ltm.c
+    ${LUA_DIR}/lundump.c
+    ${LUA_DIR}/lvm.c
+    ${LUA_DIR}/lzio.c
+    ${LUA_DIR}/lauxlib.c
+    ${LUA_DIR}/lbaselib.c
+    ${LUA_DIR}/lcorolib.c
+    ${LUA_DIR}/ldblib.c
+    ${LUA_DIR}/liolib.c
+    ${LUA_DIR}/lmathlib.c
+    ${LUA_DIR}/loslib.c
+    ${LUA_DIR}/lstrlib.c
+    ${LUA_DIR}/ltablib.c
+    ${LUA_DIR}/lutf8lib.c
+    ${LUA_DIR}/loadlib.c
+    ${LUA_DIR}/linit.c
+)
+
+target_include_directories(lua PUBLIC ${LUA_DIR})
+
+# ---------------------------- sol2 ----------------------------
+
+add_subdirectory(sol2)
+
+# ---------------------------- ImGui ----------------------------
+
+set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
+
+add_library(imgui STATIC
+    ${IMGUI_DIR}/imgui.cpp
+    ${IMGUI_DIR}/imgui_draw.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp
+)
+
+target_include_directories(imgui PUBLIC
+    ${IMGUI_DIR}
+)
+
+# ---------------- SDL3 backend for ImGui ----------------
+
+add_library(imgui_sdl3 STATIC
+    ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_sdlrenderer3.cpp
+)
+
+target_include_directories(imgui_sdl3 PUBLIC
+    ${IMGUI_DIR}
+    ${IMGUI_DIR}/backends
+)
+
+target_link_libraries(imgui_sdl3 PUBLIC
+    imgui
+    SDL3::SDL3
+)

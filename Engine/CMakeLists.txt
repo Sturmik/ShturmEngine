@@ -12,9 +12,14 @@ target_include_directories(Engine PUBLIC
 target_link_libraries(Engine
     PUBLIC
         SDL3::SDL3
-		SDL3_image::SDL3_image
-		SDL3_ttf::SDL3_ttf
-        glm
+        SDL3_image::SDL3_image
+        SDL3_mixer::SDL3_mixer
         freetype
         harfbuzz
+        SDL3_ttf::SDL3_ttf
+        glm
+        sol2::sol2
+        lua
+        imgui
+        imgui_sdl3
 )

@@ -4,6 +4,7 @@ add_executable(GameExe
     main.cpp
 )
 
+# Link libraries
 target_link_libraries(GameExe PRIVATE Engine)
 
 # Copy assets to the output

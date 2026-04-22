@@ -1,5 +1,5 @@
 -- $Id: testes/attrib.lua $
--- See Copyright Notice in file lua.h
+-- See Copyright Notice in file all.lua
 
 print "testing require"
 
@@ -85,7 +85,7 @@ local DIR = "libs" .. dirsep
 
 -- prepend DIR to a name and correct directory separators
 local function D (x)
-  local x = string.gsub(x, "/", dirsep)
+  x = string.gsub(x, "/", dirsep)
   return DIR .. x
 end
 
@@ -106,7 +106,7 @@ local function createfiles (files, preextras, posextras)
   end
 end
 
-local function removefiles (files)
+function removefiles (files)
   for n in pairs(files) do
     os.remove(D(n))
   end
@@ -154,9 +154,10 @@ local try = function (p, n, r, ext)
   assert(ext == x)
 end
 
-local a = require"names"
+a = require"names"
 assert(a[1] == "names" and a[2] == D"names.lua")
 
+_G.a = nil
 local st, msg = pcall(require, "err")
 assert(not st and string.find(msg, "arithmetic") and B == 15)
 st, msg = pcall(require, "synerr")
@@ -190,7 +191,6 @@ try("X", "XXxX", AA, "libs/XXxX")
 
 
 removefiles(files)
-NAME, REQUIRED, AA, B = nil
 
 
 -- testing require of sub-packages
@@ -223,7 +223,7 @@ assert(require"P1" == m and m.AA == 10)
 
 
 removefiles(files)
-AA = nil
+
 
 package.path = ""
 assert(not pcall(require, "file_does_not_exist"))
@@ -236,7 +236,7 @@ package.path = oldpath
 local fname = "file_does_not_exist2"
 local m, err = pcall(require, fname)
 for t in string.gmatch(package.path..";"..package.cpath, "[^;]+") do
-  local t = string.gsub(t, "?", fname)
+  t = string.gsub(t, "?", fname)
   assert(string.find(err, t, 1, true))
 end
 
@@ -305,14 +305,13 @@ else
   assert(_ENV.x == "lib1.sub" and _ENV.y == DC"lib1")
   assert(string.find(ext, "libs/lib1", 1, true))
   assert(fs.id(45) == 45)
-  _ENV.x, _ENV.y = nil
 end
-
 
 _ENV = _G
 
 
 -- testing preload
+
 do
   local p = package
   package = {}
@@ -331,26 +330,6 @@ do
   assert(type(package.path) == "string")
 end
 
-
-do  print("testing external strings")
-  package.cpath = DC"?"
-  local lib2 = require"lib2-v2"
-  local t = {}
-  for _, len in ipairs{0, 10, 39, 40, 41, 1000} do
-    local str = string.rep("a", len)
-    local str1 = lib2.newstr(str)
-    assert(str == str1)
-    assert(not T or T.hash(str) == T.hash(str1))
-    t[str1] = 20; assert(t[str] == 20 and t[str1] == 20)
-    t[str] = 10; assert(t[str1] == 10)
-    local tt = {[str1] = str1}
-    assert(next(tt) == str1 and next(tt, str1) == nil)
-    assert(tt[str] == str)
-    local str2 = lib2.newstr(str1)
-    assert(str == str2 and t[str2] == 10 and tt[str2] == str)
-  end
-end
-
 print('+')
 
 end  --]
@@ -359,10 +338,10 @@ print("testing assignments, logical operators, and constructors")
 
 local res, res2 = 27
 
-local a, b = 1, 2+3
+a, b = 1, 2+3
 assert(a==1 and b==5)
 a={}
-local function f() return 10, 11, 12 end
+function f() return 10, 11, 12 end
 a.x, b, a[1] = 1, 2, f()
 assert(a.x==1 and b==2 and a[1]==10)
 a[f()], b, a[f()+3] = f(), a, 'x'
@@ -374,15 +353,15 @@ do
   local a,b,c
   a,b = 0, f(1)
   assert(a == 0 and b == 1)
-  a,b = 0, f(1)
-  assert(a == 0 and b == 1)
+  A,b = 0, f(1)
+  assert(A == 0 and b == 1)
   a,b,c = 0,5,f(4)
   assert(a==0 and b==5 and c==1)
   a,b,c = 0,5,f(0)
   assert(a==0 and b==5 and c==nil)
 end
 
-local a, b, c, d = 1 and nil, 1 or nil, (1 and (nil or 1)), 6
+a, b, c, d = 1 and nil, 1 or nil, (1 and (nil or 1)), 6
 assert(not a and b and c and d==6)
 
 d = 20
@@ -440,7 +419,6 @@ assert(not pcall(function () local a = {[nil] = 10} end))
 assert(a[nil] == undef)
 a = nil
 
-local a, b, c
 a = {10,9,8,7,6,5,4,3,2; [-3]='a', [f]=print, a='a', b='ab'}
 a, a.x, a.y = a, a[-3]
 assert(a[1]==10 and a[-3]==a.a and a[f]==print and a.x=='a' and not a.y)
@@ -456,18 +434,8 @@ a.aVeryLongName012345678901234567890123456789012345678901234567890123456789 ==
 10)
 
 
-do
-  -- _ENV constant
-  local function foo ()
-    local _ENV <const> = 11
-    X = "hi"
-  end
-  local st, msg = pcall(foo)
-  assert(not st and string.find(msg, "number"))
-end
 
-
--- test of large float/integer indices
+-- test of large float/integer indices 
 
 -- compute maximum integer where all bits fit in a float
 local maxint = math.maxinteger
@@ -477,7 +445,7 @@ while maxint ~= (maxint + 0.0) or (maxint - 1) ~= (maxint - 1.0) do
   maxint = maxint // 2
 end
 
-local maxintF = maxint + 0.0   -- float version
+maxintF = maxint + 0.0   -- float version
 
 assert(maxintF == maxint and math.type(maxintF) == "float" and
        maxintF >= 2.0^14)
