@@ -13,5 +13,8 @@ target_link_libraries(Engine
     PUBLIC
         SDL3::SDL3
 		SDL3_image::SDL3_image
-		glm
+		SDL3_ttf::SDL3_ttf
+        glm
+        freetype
+        harfbuzz
 )

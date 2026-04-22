@@ -12,11 +12,12 @@ public:
 	~Game();
 	void Initialize();
 	void Setup();
-	void Run();
-	void ProcessInput();
+	void ProcessInput(SDL_Event& event);
 	void Update();
 	void Render();
 	void Destroy();
+
+	bool IsGameRunning();
 
 private:
 	bool _isRunning;

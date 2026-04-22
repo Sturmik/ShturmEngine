@@ -67,49 +67,34 @@ void Game::Setup()
     playerVelocity = glm::vec2(50.0, 50.0);
 }
 
-void Game::Run()
+void Game::ProcessInput(SDL_Event& event)
 {
-    Setup();
-    while (_isRunning)
+    switch (event.type)
     {
-        ProcessInput();
-        Update();
-        Render();
-    }
-}
-
-void Game::ProcessInput()
-{
-    SDL_Event event;
-    while (SDL_PollEvent(&event))
-    {
-        switch (event.type)
+        case SDL_EVENT_QUIT:
         {
-            case SDL_EVENT_QUIT:
-            {
-                _isRunning = false;
-            }
-            break;
-
-            case SDL_EVENT_KEY_DOWN:
-            {
-                switch (event.key.scancode)
-                {
-                    case SDL_SCANCODE_ESCAPE:
-                    {
-                        _isRunning = false;
-                    }
-                    break;
-
-                    default:
-                        break;
-                }
-            }
-            break;
-
-            default:
-                break;
+            _isRunning = false;
         }
+        break;
+
+        case SDL_EVENT_KEY_DOWN:
+        {
+            switch (event.key.scancode)
+            {
+                case SDL_SCANCODE_ESCAPE:
+                {
+                    _isRunning = false;
+                }
+                break;
+
+                default:
+                    break;
+            }
+        }
+        break;
+
+        default:
+            break;
     }
 }
 
@@ -176,4 +161,9 @@ void Game::Destroy()
     }
 
     SDL_Quit();
+}
+
+bool Game::IsGameRunning()
+{
+    return _isRunning;
 }
