@@ -2,6 +2,7 @@
 
 add_library(Engine STATIC
     Logger/Logger.cpp
+    ECS/ECS.cpp
     Game/Game.cpp
 )
 
