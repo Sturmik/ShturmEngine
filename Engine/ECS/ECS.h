@@ -82,7 +82,85 @@ void System::RequireComponent()
 	_componentSignature.set(componentId);
 }
 
+/////////////////////////////////////////////////////////////////////
+// Pool
+/////////////////////////////////////////////////////////////////////
+// A pool is just a vector (contigious data) of objects of type T
+/////////////////////////////////////////////////////////////////////
+class IPool
+{
+public:
+	virtual ~IPool() {}
+};
+
+template<typename T>
+class Pool : public IPool
+{
+public:
+	Pool(int size = 100)
+	{
+		_data.resize(size);
+	}
+
+	virtual ~Pool() = default;
+
+	bool IsEmpty() const
+	{
+		return _data.empty();
+	}
+
+	int GetSize() const
+	{
+		return _data.size();
+	}
+
+	void Resize(int n)
+	{
+		_data.resize(n);
+	}
+
+	void Clear()
+	{
+		_data.clear();
+	}
+
+	void Add(T object)
+	{
+		_data.push_back(object);
+	}
+
+	void Set(int index, T object)
+	{
+		_data[index] = object;
+	}
+
+	T& Get(int index)
+	{
+		return static_cast<T&>(_data[index]);
+	}
+
+	T& operator[] (unsigned int index)
+	{
+		return _data[index];
+	}
+
+private:
+	std::vector<T> _data;
+};
+
+/////////////////////////////////////////////////////////////////////
+// Registry
+/////////////////////////////////////////////////////////////////////
+// The registry manages the creation of entities, add systems,
+// and components.
+/////////////////////////////////////////////////////////////////////
 class Registry
 {
-	// TODO: ...
+private:
+	int numEntities;
+
+	// Vector of component pools, each pool contains all the data for a certain component type
+	// Vector index = component type id
+	// Pool index = entity id
+	std::vector<IPool*> _componentPools;
 };
