@@ -11,10 +11,27 @@ int Entity::GetId() const
 
 void System::AddEntityToSystem(Entity entity)
 {
+    auto it = std::find_if(_entities.begin(), _entities.end(),
+        [&entity](const Entity& other) {
+            return entity.GetId() == other.GetId();
+        });
+
+    if (it == _entities.end())
+    {
+        _entities.push_back(entity);
+    }
 }
 
 void System::RemoveEntityFromSystem(Entity entity)
 {
+    _entities.erase(
+        std::remove_if(_entities.begin(), _entities.end(),
+            [&entity](const Entity& other)
+            {
+                return entity.GetId() == other.GetId();
+            }),
+        _entities.end()
+    );
 }
 
 std::vector<Entity> System::GetSystemEntities() const
@@ -22,7 +39,7 @@ std::vector<Entity> System::GetSystemEntities() const
 	return _entities;
 }
 
-Signature System::GetComponentSignature() const
+const Signature& System::GetComponentSignature() const
 {
 	return _componentSignature;
 }
