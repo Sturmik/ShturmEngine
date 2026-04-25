@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <typeindex>
+#include <set>
 
 const unsigned int MAX_COMPONENTS = 32;
 /////////////////////////////////////////////////////////////////////
@@ -161,19 +162,11 @@ class Registry
 public: 
 	Registry() = default;
 
-	// TODO:
-	// CreateEntity()
-	// KillEntity()
-	//
-	// AddComponent(Entity entity)
-	// RemoveComponent(Entity entity)
-	// HasComponent(Entity entity)
-	// GetComponent(Entity entity)
-	//
-	// AddSystem()
-	// RemoveSystem()
-	// HasSystem()
-	// GetSystem()
+	Entity CreateEntity();
+	
+	void AddEntityToSystem(Entity entity);
+
+	void Update();
 
 private:
 	int _numEntities;
@@ -188,4 +181,8 @@ private:
 	std::vector<Signature> _entityComponentSignatures;
 
 	std::unordered_map<std::type_index, System*> _systems;
+
+	// Set of entities that are flagged to be added or removed in the next registry Update()
+	std::set<Entity> _entitiesToBeAdded;
+	std::set<Entity> _entitiesToBeKilled;
 };
