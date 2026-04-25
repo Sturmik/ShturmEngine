@@ -13,7 +13,7 @@ void System::AddEntityToSystem(Entity entity)
 {
     auto it = std::find_if(_entities.begin(), _entities.end(),
         [&entity](const Entity& other) {
-            return entity.GetId() == other.GetId();
+            return entity == other;
         });
 
     if (it == _entities.end())
@@ -28,7 +28,7 @@ void System::RemoveEntityFromSystem(Entity entity)
         std::remove_if(_entities.begin(), _entities.end(),
             [&entity](const Entity& other)
             {
-                return entity.GetId() == other.GetId();
+                return entity == other;
             }),
         _entities.end()
     );
