@@ -24,8 +24,6 @@ public:
  
 			transform.position.x += rigidBody.velocity.x * deltaTime;
 			transform.position.y += rigidBody.velocity.y * deltaTime;
-
-			LOG_INFO("Entity Moves!\tx:%f\ty:%f", transform.position.x, transform.position.y);
 		}
 	}
 };

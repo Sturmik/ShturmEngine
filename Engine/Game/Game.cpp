@@ -8,6 +8,7 @@
 #include "Logger/LoggerMacro.h"
 
 #include "Systems/MovementSystem.h"
+#include "Systems/RenderSystem.h"
 
 Game::Game() : _isRunning(false), _window(nullptr), _renderer(nullptr)
 {
@@ -65,13 +66,18 @@ void Game::Setup()
 {
     // Add the systems that need to be processed in our game
     _registry.AddSystem<MovementSystem>();
+    _registry.AddSystem<RenderSystem>();
 
-    // Create an entity
+    // Create entities
     Entity tank = _registry.CreateEntity();
-    
-    // Add some components to that entity
     tank.AddComponent<TransformComponent>( glm::vec2(10, 30), glm::vec2(1.0, 1.0), 0.0);
-    tank.AddComponent<RigidBodyComponent>( glm::vec2(50, 20));
+    tank.AddComponent<RigidBodyComponent>( glm::vec2(50, 0));
+    tank.AddComponent<SpriteComponent>(50, 20);
+
+    Entity truck = _registry.CreateEntity();
+    truck.AddComponent<TransformComponent>(glm::vec2(40, 160), glm::vec2(1.0, 1.0), 0.0);
+    truck.AddComponent<RigidBodyComponent>(glm::vec2(0, 20));
+    truck.AddComponent<SpriteComponent>(110, 10);
 }
 
 void Game::ProcessInput(SDL_Event& event)
@@ -134,7 +140,7 @@ void Game::Update()
     _registry.GetSystem<MovementSystem>().Update(deltaTime);
 
     // Update the registry to process the entities that are waiting to be created/deleted
-    _registry.Update(deltaTime);
+    _registry.Update();
 }
 
 void Game::Render()
@@ -142,7 +148,7 @@ void Game::Render()
     SDL_SetRenderDrawColor(_renderer, 21, 21, 21, 255);
     SDL_RenderClear(_renderer);
 
-    // TODO: Render game objects... 
+    _registry.GetSystem<RenderSystem>().Update(*_renderer);
 
     SDL_RenderPresent(_renderer);
 }

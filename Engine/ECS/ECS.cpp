@@ -46,7 +46,7 @@ const Signature& System::GetComponentSignature() const
 	return _componentSignature;
 }
 
-void Registry::Update(float deltaTime)
+void Registry::Update()
 {
     // Add the entities that are waiting to be created to the active Systems
     for (Entity entity : _entitiesToBeAdded)

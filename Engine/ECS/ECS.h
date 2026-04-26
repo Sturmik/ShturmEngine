@@ -179,7 +179,7 @@ class Registry
 public: 
 	Registry() : _numEntities(0) {}
 
-	void Update(float deltaTime);
+	void Update();
 
 	// Entity management
 
