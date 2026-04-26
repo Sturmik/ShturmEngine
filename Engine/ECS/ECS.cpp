@@ -2,7 +2,7 @@
 
 int IComponent::nextId = 0;
 
-Entity::Entity(int id) : _id(id)
+Entity::Entity(int id, Registry* registry) : _id(id), _registry(registry)
 {
 }
 
@@ -63,7 +63,7 @@ Entity Registry::CreateEntity()
     int entityId;
     entityId = _numEntities++;
 
-    Entity entity(entityId);
+    Entity entity(entityId, this);
     _entitiesToBeAdded.insert(entity);
 
     if (entityId >= _entityComponentSignatures.size())

@@ -68,8 +68,10 @@ void Game::Setup()
     Entity tank = _registry.CreateEntity();
     
     // Add some components to that entity
-    _registry.AddComponent<TransformComponent>(tank, glm::vec2(10, 30), glm::vec2(1.0, 1.0), 0.0);
-    _registry.AddComponent<RigidBodyComponent>(tank, glm::vec2(50, 20));
+    tank.AddComponent<TransformComponent>( glm::vec2(10, 30), glm::vec2(1.0, 1.0), 0.0);
+    tank.AddComponent<RigidBodyComponent>( glm::vec2(50, 20));
+
+    tank.RemoveComponent<TransformComponent>();
 }
 
 void Game::ProcessInput(SDL_Event& event)
