@@ -48,6 +48,12 @@ const Signature& System::GetComponentSignature() const
 	return _componentSignature;
 }
 
+void Registry::Update()
+{
+    // TODO: Add the entities that are waiting to be created to the active Systems
+    // TODO: Remove the entities that are waiting to be killed from the active Systems
+}
+
 Entity Registry::CreateEntity()
 {
     int entityId;
@@ -61,8 +67,22 @@ Entity Registry::CreateEntity()
     return entity;
 }
 
-void Registry::Update()
+void Registry::AddEntityToSystems(Entity entity)
 {
-    // TODO: Add the entities that are waiting to be created to the active Systems
-    // TODO: Remove the entities that are waiting to be killed from the active Systems
+    const int entityId = entity.GetId();
+
+    const Signature entityComponentSignature = entityComponentSignature[entityId];
+
+    // Loop all systems
+    for (std::pair<const std::type_index, System*>& systemPair : _systems)
+    {
+        const Signature& systemComponentSignature = systemPair.second->GetComponentSignature();
+        
+        bool isInterested = (systemComponentSignature & entityComponentSignature) == systemComponentSignature;
+    
+        if (isInterested)
+        {
+            systemPair.second->AddEntityToSystem(entity);
+        }
+    }
 }
