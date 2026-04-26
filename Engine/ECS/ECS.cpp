@@ -85,7 +85,7 @@ void Registry::AddEntityToSystems(Entity entity)
     const Signature entityComponentSignature = entityComponentSignature[entityId];
 
     // Loop all systems
-    for (std::pair<const std::type_index, System*>& systemPair : _systems)
+    for (std::pair<const std::type_index, std::shared_ptr<System>>& systemPair : _systems)
     {
         const Signature& systemComponentSignature = systemPair.second->GetComponentSignature();
         

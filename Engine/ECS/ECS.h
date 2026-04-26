@@ -161,7 +161,7 @@ private:
 class Registry
 {
 public: 
-	Registry() = default;
+	Registry() : _numEntities(0) {}
 
 	void Update();
 
@@ -198,14 +198,14 @@ private:
 	// Vector of component pools, each pool contains all the data for a certain component type
 	// [Vector index = component type id]
 	// [Pool index = entity id]
-	std::vector<IPool*> _componentPools;
+	std::vector<std::shared_ptr<IPool>> _componentPools;
 
 	// Vector of component signatures per entity, saying which component is turned "on" for a given entity
 	// [Vector index = entity id]
 	std::vector<Signature> _entityComponentSignatures;
 
 	// Systems unordered map
-	std::unordered_map<std::type_index, System*> _systems;
+	std::unordered_map<std::type_index, std::shared_ptr<System>> _systems;
 
 	// Set of entities that are flagged to be added or removed in the next registry Update()
 	std::set<Entity> _entitiesToBeAdded;
@@ -227,12 +227,12 @@ void Registry::AddComponent(Entity entity, TArgs&& ...args)
 	// If we still don't have a Pool for that component type
 	if (_componentPools[componentId] == nullptr)
 	{
-		Pool<TComponent>* newComponentPool = new Pool<TComponent>();
+		std::shared_ptr<Pool<TComponent>> newComponentPool = std::make_shared<Pool<TComponent>>();
 		_componentPools[componentId] = newComponentPool;
 	}
 
 	// Get the pool of component values for that component type
-	Pool<TComponent>* componentPool = Pool<TComponent>(_componentPools[componentId]);
+	std::shared_ptr<Pool<TComponent>> componentPool = std::static_pointer_cast<Pool<TComponent>>(_componentPools[componentId]);
 
 	// If the entity id is greater than the current size of the component pool, then resize the pool
 	if (entityId >= componentPool->GetSize())
@@ -271,7 +271,7 @@ bool Registry::HasComponent(Entity entity) const
 template<typename TSystem, typename ...TArgs>
 void Registry::AddSystem(TArgs && ...args)
 {
-	TSystem* newSystem = new TSystem(std::forward(args));
+	std::shared_ptr<TSystem> newSystem = std::make_shared<TSystem>(std::forward(args));
 	_systems.insert(std::make_pair(std::type_index(typeid(TSystem)), newSystem));
 }
 
