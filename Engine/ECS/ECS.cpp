@@ -50,7 +50,13 @@ const Signature& System::GetComponentSignature() const
 
 void Registry::Update()
 {
-    // TODO: Add the entities that are waiting to be created to the active Systems
+    // Add the entities that are waiting to be created to the active Systems
+    for (Entity entity : _entitiesToBeAdded)
+    {
+        AddEntityToSystems(entity);
+    }
+    _entitiesToBeAdded.clear();
+
     // TODO: Remove the entities that are waiting to be killed from the active Systems
 }
 
@@ -61,6 +67,11 @@ Entity Registry::CreateEntity()
 
     Entity entity(entityId);
     _entitiesToBeAdded.insert(entity);
+
+    if (entityId >= _entityComponentSignatures.size())
+    {
+        _entityComponentSignatures.resize(entityId + 1);
+    }
 
     LOG_INFO("Entity created with id = %d", entityId);
 

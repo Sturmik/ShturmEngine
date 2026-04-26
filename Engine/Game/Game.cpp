@@ -61,11 +61,9 @@ void Game::Initialize()
 
 void Game::Setup()
 {
-    // TODO:
-    // Entity tank = registry.CreateEntity();
-    // tank.AddComponent<TransformComponent>();
-    // tank.AddComponent<BoxColliderComponent>();
-    // tank.AddComponent<SpriteComponent>("./assets/images/tank.png");
+    // Create some entities
+    Entity tank = _registry.CreateEntity();
+    Entity truck = _registry.CreateEntity();
 }
 
 void Game::ProcessInput(SDL_Event& event)

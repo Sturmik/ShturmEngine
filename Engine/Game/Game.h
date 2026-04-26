@@ -2,6 +2,8 @@
 
 #include <SDL3/SDL.h>
 
+#include "ECS/ECS.h"
+
 const int FPS = 60;
 const int MILLISECONDS_PER_FRAME = 1000 / FPS;
 
@@ -24,4 +26,6 @@ private:
 
 	SDL_Window* _window;
 	SDL_Renderer* _renderer;
+
+	Registry _registry;
 };

@@ -168,8 +168,6 @@ public:
 	// Entity management
 
 	Entity CreateEntity();
-	
-	void AddEntityToSystem(Entity entity);
 
 	// Component management
 
@@ -206,6 +204,7 @@ private:
 	// [Vector index = entity id]
 	std::vector<Signature> _entityComponentSignatures;
 
+	// Systems unordered map
 	std::unordered_map<std::type_index, System*> _systems;
 
 	// Set of entities that are flagged to be added or removed in the next registry Update()
