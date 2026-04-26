@@ -166,6 +166,15 @@ public:
 	
 	void AddEntityToSystem(Entity entity);
 
+	template<typename TComponent, typename ...TArgs>
+	void AddComponent(Entity entity, TArgs&& ...args);
+
+	template<typename TComponent>
+	void RemoveComponent(Entity entity);
+
+	template<typename TComponent>
+	bool HasComponent(Entity entity);
+
 	void Update();
 
 private:
@@ -186,3 +195,59 @@ private:
 	std::set<Entity> _entitiesToBeAdded;
 	std::set<Entity> _entitiesToBeKilled;
 };
+
+template<typename TComponent, typename ...TArgs>
+void Registry::AddComponent(Entity entity, TArgs&& ...args)
+{
+	const int componentId = Component<TComponent>::GetId();
+	const int entityId = entity.GetId();
+
+	// If the component id is greater than the current size of the componentPools, then resize the vector
+	if (componentId >= _componentPools.size())
+	{
+		_componentPools.resize(componentId + 1, nullptr);
+	}
+
+	// If we still don't have a Pool for that component type
+	if (_componentPools[componentId] == nullptr)
+	{
+		Pool<TComponent>* newComponentPool = new Pool<TComponent>();
+		_componentPools[componentId] = newComponentPool;
+	}
+
+	// Get the pool of component values for that component type
+	Pool<TComponent>* componentPool = Pool<TComponent>(_componentPools[componentId]);
+
+	// If the entity id is greater than the current size of the component pool, then resize the pool
+	if (entityId >= componentPool->GetSize())
+	{
+		componentPool->Resize(_numEntities);
+	}
+
+	// Create a new Component object of the type T, and forward the various parameters to the constructor
+	TComponent newComponent(std::forward<TArgs>(args)...);
+
+	// Add the new component to the component pool list, using the entity id as index
+	componentPool->Set(entityId, newComponent);
+
+	// Change the component signature of the entity and set the component id on the bitset to 1
+	_entityComponentSignatures[entityId].set(componentId);
+}
+
+template<typename TComponent>
+void Registry::RemoveComponent(Entity entity)
+{
+	const int componentId = Component<TComponent>::GetId();
+	const int entityId = entity.GetId();
+
+	_entityComponentSignatures[entityId].set(componentId, false);
+}
+
+template<typename TComponent>
+inline bool Registry::HasComponent(Entity entity)
+{
+	const int componentId = Component<TComponent>::GetId();
+	const int entityId = entity.GetId();
+
+	return _entityComponentSignatures[entityId].test(componentId);
+}

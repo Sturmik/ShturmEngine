@@ -2,6 +2,8 @@
 
 #include "Logger/LoggerMacro.h"
 
+int IComponent::nextId = 0;
+
 Entity::Entity(int id) : _id(id)
 {
 }
@@ -20,7 +22,7 @@ void System::AddEntityToSystem(Entity entity)
 
     if (it == _entities.end())
     {
-        _entities.push_back(entity);
+        _entities.emplace_back(entity);
     }
 }
 
