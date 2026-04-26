@@ -7,6 +7,8 @@
 #include <set>
 #include <memory>
 
+#include "Logger/LoggerMacro.h"
+
 const unsigned int MAX_COMPONENTS = 32;
 /////////////////////////////////////////////////////////////////////
 // Signature
@@ -27,6 +29,7 @@ protected:
 template<typename T>
 class Component : public IComponent
 {
+public:
 	// Returns the unique id of Component<T>
 	static int GetId()
 	{
@@ -248,6 +251,8 @@ void Registry::AddComponent(Entity entity, TArgs&& ...args)
 
 	// Change the component signature of the entity and set the component id on the bitset to 1
 	_entityComponentSignatures[entityId].set(componentId);
+
+	LOG_INFO("Component id = %d was added to entity id %d", componentId, entityId);
 }
 
 template<typename TComponent>

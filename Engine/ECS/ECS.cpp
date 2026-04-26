@@ -1,7 +1,5 @@
 #include "ECS.h"
 
-#include "Logger/LoggerMacro.h"
-
 int IComponent::nextId = 0;
 
 Entity::Entity(int id) : _id(id)

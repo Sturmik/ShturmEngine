@@ -7,6 +7,9 @@
 #include "ECS/ECS.h"
 #include "Logger/LoggerMacro.h"
 
+#include "Components/TransformComponent.h"
+#include "Components/RigidBodyComponent.h"
+
 Game::Game() : _isRunning(false), _window(nullptr), _renderer(nullptr)
 {
 	LOG_INFO("Game constructor called!");
@@ -61,9 +64,12 @@ void Game::Initialize()
 
 void Game::Setup()
 {
-    // Create some entities
+    // Create an entity
     Entity tank = _registry.CreateEntity();
-    Entity truck = _registry.CreateEntity();
+    
+    // Add some components to that entity
+    _registry.AddComponent<TransformComponent>(tank, glm::vec2(10, 30), glm::vec2(1.0, 1.0), 0.0);
+    _registry.AddComponent<RigidBodyComponent>(tank, glm::vec2(50, 20));
 }
 
 void Game::ProcessInput(SDL_Event& event)
