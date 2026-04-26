@@ -62,7 +62,7 @@ public:
 	template<typename TComponent>
 	void HasComponent() const;
 	template<typename TComponent>
-	void GetComponent() const;
+	TComponent& GetComponent() const;
 
 private:
 	Registry* _registry;
@@ -179,7 +179,7 @@ class Registry
 public: 
 	Registry() : _numEntities(0) {}
 
-	void Update();
+	void Update(float deltaTime);
 
 	// Entity management
 
@@ -296,7 +296,7 @@ TComponent& Registry::GetComponent(Entity entity) const
 	const int componentId = Component<TComponent>::GetId();
 	const int entityId = entity.GetId();
 
-	std::shared_ptr<Pool<TComponent>>& componentPool = std::static_pointer_cast<Pool<TComponent>>(_componentPools[componentId]);
+	std::shared_ptr<Pool<TComponent>> componentPool = std::static_pointer_cast<Pool<TComponent>>(_componentPools[componentId]);
 
 	return componentPool->Get(entityId);
 }
@@ -304,7 +304,7 @@ TComponent& Registry::GetComponent(Entity entity) const
 template<typename TSystem, typename ...TArgs>
 void Registry::AddSystem(TArgs && ...args)
 {
-	std::shared_ptr<TSystem> newSystem = std::make_shared<TSystem>(std::forward(args));
+	std::shared_ptr<TSystem> newSystem = std::make_shared<TSystem>(std::forward(args)...);
 	_systems.insert(std::make_pair(std::type_index(typeid(TSystem)), newSystem));
 }
 
@@ -347,7 +347,7 @@ void Entity::HasComponent() const
 }
 
 template<typename TComponent>
-void Entity::GetComponent() const
+TComponent& Entity::GetComponent() const
 {
-	_registry->GetComponent<TComponent>(*this);
+	return _registry->GetComponent<TComponent>(*this);
 }

@@ -46,7 +46,7 @@ const Signature& System::GetComponentSignature() const
 	return _componentSignature;
 }
 
-void Registry::Update()
+void Registry::Update(float deltaTime)
 {
     // Add the entities that are waiting to be created to the active Systems
     for (Entity entity : _entitiesToBeAdded)
@@ -80,7 +80,7 @@ void Registry::AddEntityToSystems(Entity entity)
 {
     const int entityId = entity.GetId();
 
-    const Signature entityComponentSignature = entityComponentSignature[entityId];
+    const Signature entityComponentSignature = _entityComponentSignatures[entityId];
 
     // Loop all systems
     for (std::pair<const std::type_index, std::shared_ptr<System>>& systemPair : _systems)
