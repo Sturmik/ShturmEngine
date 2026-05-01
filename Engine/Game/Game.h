@@ -14,6 +14,7 @@ public:
 	Game();
 	~Game();
 	void Initialize();
+	void LoadLevel(int level);
 	void Setup();
 	void ProcessInput(SDL_Event& event);
 	void Update();

@@ -3,6 +3,8 @@
 #include <SDL3_image/SDL_image.h>
 #include <glm/glm.hpp>
 #include <iostream>
+#include <string>
+#include <sstream>
 
 #include "ECS/ECS.h"
 #include "Logger/LoggerMacro.h"
@@ -62,7 +64,7 @@ void Game::Initialize()
     _isRunning = true;
 }
 
-void Game::Setup()
+void Game::LoadLevel(int level)
 {
     // Add the systems that need to be processed in our game
     _registry.AddSystem<MovementSystem>();
@@ -72,16 +74,95 @@ void Game::Setup()
     _assetStore.AddTexture(_renderer, "tank-image", "./Assets/Images/tank-panther-right.png");
     _assetStore.AddTexture(_renderer, "truck-image", "./Assets/Images/truck-ford-right.png");
 
+    // Load tile atlas texture (tileset image)
+    _assetStore.AddTexture(_renderer, "jungle-tilemap-image", "./Assets/Tilemaps/jungle.png");
+    // Open tilemap data (grid of tile indices)
+    std::ifstream file("./Assets/Tilemaps/jungle.map");
+    if (file.is_open()) 
+    {
+        // Query atlas (tileset) dimensions
+        float atlasWidth = 0.0f;
+        float atlasHeight = 0.0f;
+        SDL_GetTextureSize( _assetStore.GetTexture("jungle-tilemap-image"),
+            &atlasWidth,
+            &atlasHeight );
+
+        // Tileset layout (number of tiles in atlas grid)
+        const int TILE_ROWS = 3;
+        const int TILE_COLUMNS = 10;
+
+        // Size of a single tile in the atlas
+        const int TILE_WIDTH = static_cast<int>(atlasWidth / TILE_COLUMNS);
+        const int TILE_HEIGHT = static_cast<int>(atlasHeight / TILE_ROWS);
+
+        const float TILE_SCALE = 4.0f;
+
+        std::string line;
+        int row = 0;
+
+        // Read map row-by-row
+        while (std::getline(file, line))
+        {
+            std::stringstream ss(line);
+            std::string token;
+            int col = 0;
+
+            // Parse comma-separated tile indices
+            while (std::getline(ss, token, ','))
+            {
+                const int tileIndex = std::atoi(token.c_str());
+
+                // Convert 1D tile index to 2D atlas coordinates
+                const int srcRow = tileIndex / TILE_COLUMNS;
+                const int srcCol = tileIndex % TILE_COLUMNS;
+
+                // Create tile entity
+                Entity tile = _registry.CreateEntity();
+
+                // World position (grid-based placement)
+                tile.AddComponent<TransformComponent>(
+                    glm::vec2(col * TILE_WIDTH * TILE_SCALE, row * TILE_HEIGHT * TILE_SCALE),
+                    glm::vec2(TILE_SCALE, TILE_SCALE),
+                    0.0f
+                );
+
+                // Source rectangle inside the atlas
+                tile.AddComponent<SpriteComponent>(
+                    "jungle-tilemap-image",
+                    TILE_WIDTH,
+                    TILE_HEIGHT,
+                    srcCol * TILE_WIDTH,
+                    srcRow * TILE_HEIGHT
+                );
+
+                col++;
+            }
+
+            row++;
+        }
+
+        file.close();
+    }
+    else 
+    {
+        LOG_ERROR("Unable to open file: %s", "./Assets/Tilemaps/jungle.map");
+    }
+
     // Create entities
     Entity tank = _registry.CreateEntity();
-    tank.AddComponent<TransformComponent>( glm::vec2(10, 30), glm::vec2(1.0, 1.0), 0.0);
-    tank.AddComponent<RigidBodyComponent>( glm::vec2(50, 20));
+    tank.AddComponent<TransformComponent>(glm::vec2(10, 30), glm::vec2(1.0, 1.0), 0.0);
+    tank.AddComponent<RigidBodyComponent>(glm::vec2(50, 20));
     tank.AddComponent<SpriteComponent>(_assetStore, "tank-image");
 
     Entity truck = _registry.CreateEntity();
     truck.AddComponent<TransformComponent>(glm::vec2(40, 160), glm::vec2(1.0, 1.0), 0.0);
     truck.AddComponent<RigidBodyComponent>(glm::vec2(20, 20));
     truck.AddComponent<SpriteComponent>(_assetStore, "truck-image");
+}
+
+void Game::Setup()
+{
+    LoadLevel(0);
 }
 
 void Game::ProcessInput(SDL_Event& event)

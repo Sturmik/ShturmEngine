@@ -35,6 +35,9 @@ void AssetStore::AddTexture(SDL_Renderer* renderer, const std::string& assetId, 
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
 	SDL_DestroySurface(surface);
 
+	// Change texture scale mode to get rid of lines near edges
+	SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+
 	// Add the texture to the map
 	_textures.emplace(assetId, texture);
 
