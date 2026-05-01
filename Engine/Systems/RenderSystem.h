@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ECS/ECS.h"
+#include "AssetStore/AssetStore.h"
 #include "Components/TransformComponent.h"
 #include "Components/SpriteComponent.h"
 
@@ -15,7 +16,7 @@ public:
 		RequireComponent<SpriteComponent>();
 	}
 
-	void Update(SDL_Renderer& renderer)
+	void Update(SDL_Renderer& renderer, AssetStore& assetStore)
 	{
 		// Loop all entities that the system is interested in
 		for (Entity& entity : GetSystemEntities())
@@ -24,15 +25,25 @@ public:
 			const TransformComponent& transform = entity.GetComponent<TransformComponent>();
 			const SpriteComponent& sprite = entity.GetComponent<SpriteComponent>();
 
-			SDL_FRect objRect = {
+			// Set the source rectangle of our original sprite texture
+			SDL_FRect srcRect = sprite.srcRect;
+
+			// Set the destination rectangle with the x, y position to be rendered
+			SDL_FRect dstRect = {
 				transform.position.x,
 				transform.position.y,
-				sprite.width,
-				sprite.height
+				sprite.width * transform.scale.x,
+				sprite.height * transform.scale.y
 			};
 
-			SDL_SetRenderDrawColor(&renderer, 255, 255, 255, 255);
-			SDL_RenderFillRect(&renderer, &objRect);
+			// Draw the PNG texture
+			SDL_RenderTextureRotated(&renderer, 
+			assetStore.GetTexture(sprite.assetId), 
+			&srcRect, 
+			&dstRect, 
+			transform.rotation,
+			NULL, 
+			SDL_FLIP_NONE);
 		}
 	}
 };

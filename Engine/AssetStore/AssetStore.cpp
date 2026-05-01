@@ -25,6 +25,12 @@ void AssetStore::ClearAssets()
 
 void AssetStore::AddTexture(SDL_Renderer* renderer, const std::string& assetId, const std::string& filePath)
 {
+	if (!SDL_GetPathInfo(filePath.c_str(), NULL)) 
+	{
+		LOG_ERROR("%s - file doesn't exist!", filePath.c_str());
+		return;
+	}
+
 	SDL_Surface* surface = IMG_Load(filePath.c_str());
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
 	SDL_DestroySurface(surface);
