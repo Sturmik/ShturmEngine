@@ -68,16 +68,20 @@ void Game::Setup()
     _registry.AddSystem<MovementSystem>();
     _registry.AddSystem<RenderSystem>();
 
+    // Add assets to the asset store
+    _assetStore.AddTexture(_renderer, "tank-image", "./Assets/images/tank-panther-right.png");
+    _assetStore.AddTexture(_renderer, "truck-image", "./Assets/images/truck-ford-right.png");
+
     // Create entities
     Entity tank = _registry.CreateEntity();
     tank.AddComponent<TransformComponent>( glm::vec2(10, 30), glm::vec2(1.0, 1.0), 0.0);
     tank.AddComponent<RigidBodyComponent>( glm::vec2(50, 0));
-    tank.AddComponent<SpriteComponent>(50, 20);
+    tank.AddComponent<SpriteComponent>("tank-image", 50, 20);
 
     Entity truck = _registry.CreateEntity();
     truck.AddComponent<TransformComponent>(glm::vec2(40, 160), glm::vec2(1.0, 1.0), 0.0);
     truck.AddComponent<RigidBodyComponent>(glm::vec2(0, 20));
-    truck.AddComponent<SpriteComponent>(110, 10);
+    truck.AddComponent<SpriteComponent>("truck-image", 110, 10);
 }
 
 void Game::ProcessInput(SDL_Event& event)
