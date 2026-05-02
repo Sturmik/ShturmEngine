@@ -16,7 +16,7 @@ public:
 	void Update(float deltaTime)
 	{
 		// Loop all entities that the system is interested in
-		for (Entity& entity : GetSystemEntities())
+		for (const Entity& entity : GetSystemEntities())
 		{
 			// Update entity position based on its velocity every frame of the game loop
 			TransformComponent& transform = entity.GetComponent<TransformComponent>();

@@ -95,7 +95,7 @@ void Game::LoadLevel(int level)
         const int TILE_WIDTH = static_cast<int>(atlasWidth / TILE_COLUMNS);
         const int TILE_HEIGHT = static_cast<int>(atlasHeight / TILE_ROWS);
 
-        const float TILE_SCALE = 4.0f;
+        const float TILE_SCALE = 2.0f;
 
         std::string line;
         int row = 0;
@@ -131,6 +131,7 @@ void Game::LoadLevel(int level)
                     "jungle-tilemap-image",
                     TILE_WIDTH,
                     TILE_HEIGHT,
+                    0,
                     srcCol * TILE_WIDTH,
                     srcRow * TILE_HEIGHT
                 );
@@ -152,12 +153,22 @@ void Game::LoadLevel(int level)
     Entity tank = _registry.CreateEntity();
     tank.AddComponent<TransformComponent>(glm::vec2(10, 30), glm::vec2(1.0, 1.0), 0.0);
     tank.AddComponent<RigidBodyComponent>(glm::vec2(50, 20));
-    tank.AddComponent<SpriteComponent>(_assetStore, "tank-image");
+    tank.AddComponent<SpriteComponent>(_assetStore, "tank-image", 2);
 
     Entity truck = _registry.CreateEntity();
     truck.AddComponent<TransformComponent>(glm::vec2(40, 160), glm::vec2(1.0, 1.0), 0.0);
-    truck.AddComponent<RigidBodyComponent>(glm::vec2(20, 20));
-    truck.AddComponent<SpriteComponent>(_assetStore, "truck-image");
+    truck.AddComponent<RigidBodyComponent>(glm::vec2(20, 70));
+    truck.AddComponent<SpriteComponent>(_assetStore, "truck-image", 1);
+
+    Entity truckA = _registry.CreateEntity();
+    truckA.AddComponent<TransformComponent>(glm::vec2(20, 160), glm::vec2(1.0, 1.0), 0.0);
+    truckA.AddComponent<RigidBodyComponent>(glm::vec2(30, 20));
+    truckA.AddComponent<SpriteComponent>(_assetStore, "truck-image", 3);
+
+    Entity truckB = _registry.CreateEntity();
+    truckB.AddComponent<TransformComponent>(glm::vec2(50, 160), glm::vec2(1.0, 1.0), 0.0);
+    truckB.AddComponent<RigidBodyComponent>(glm::vec2(50, 20));
+    truckB.AddComponent<SpriteComponent>(_assetStore, "truck-image", 4);
 }
 
 void Game::Setup()

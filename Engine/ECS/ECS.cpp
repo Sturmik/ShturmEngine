@@ -36,7 +36,12 @@ void System::RemoveEntityFromSystem(Entity entity)
     );
 }
 
-std::vector<Entity> System::GetSystemEntities() const
+const std::vector<Entity>& System::GetSystemEntities() const
+{
+    return _entities;
+}
+
+std::vector<Entity>& System::AccessSystemEntities()
 {
 	return _entities;
 }

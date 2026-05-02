@@ -43,6 +43,7 @@ class Registry;
 class Entity
 {
 public:
+	Entity() : _id(-1), _registry(nullptr) {}
 	Entity(int id, Registry* registry);
 	Entity(const Entity& entity) = default;
 
@@ -83,7 +84,8 @@ public:
 
 	void AddEntityToSystem(Entity entity);
 	void RemoveEntityFromSystem(Entity entity);
-	std::vector<Entity> GetSystemEntities() const;
+	const std::vector<Entity>& GetSystemEntities() const;
+	std::vector<Entity>& AccessSystemEntities();
 	const Signature& GetComponentSignature() const;
 
 	// Defines the component type that entities must have to be considered by the system

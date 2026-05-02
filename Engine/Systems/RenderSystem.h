@@ -6,6 +6,7 @@
 #include "Components/SpriteComponent.h"
 
 #include <SDL3/SDL.h>
+#include <algorithm>
 
 class RenderSystem : public System
 {
@@ -18,8 +19,17 @@ public:
 
 	void Update(SDL_Renderer& renderer, AssetStore& assetStore)
 	{
+		// Sort entities by their z-index before rendering them
+		std::sort(AccessSystemEntities().begin(), AccessSystemEntities().end(), [](const Entity& a, const Entity& b)
+		{
+			const SpriteComponent& spriteA = a.GetComponent<SpriteComponent>();
+			const SpriteComponent& spriteB = b.GetComponent<SpriteComponent>();
+
+			return spriteA.zIndex < spriteB.zIndex;
+		});
+
 		// Loop all entities that the system is interested in
-		for (Entity& entity : GetSystemEntities())
+		for (Entity& entity : AccessSystemEntities())
 		{
 			// Update entity position based on its velocity every frame of the game loop
 			const TransformComponent& transform = entity.GetComponent<TransformComponent>();
