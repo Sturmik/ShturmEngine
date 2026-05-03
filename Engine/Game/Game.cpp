@@ -12,6 +12,7 @@
 #include "Systems/MovementSystem.h"
 #include "Systems/RenderSystem.h"
 #include "Systems/AnimationSystem.h"
+#include "Systems/CollisionSystem.h"
 
 Game::Game() : _isRunning(false), _window(nullptr), _renderer(nullptr)
 {
@@ -164,30 +165,22 @@ void Game::LoadLevel(int level)
     radar.AddComponent<AnimationComponent>(8, 5, true);
 
     Entity chopper = _registry.CreateEntity();
-    chopper.AddComponent<TransformComponent>(glm::vec2(0, 0), glm::vec2(2.0, 2.0), 0.0);
+    chopper.AddComponent<TransformComponent>(glm::vec2(50, 50), glm::vec2(2.0, 2.0), 0.0);
     chopper.AddComponent<RigidBodyComponent>(glm::vec2(50, 50));
     chopper.AddComponent<SpriteComponent>( "chopper-image", 32, 32, 2);
     chopper.AddComponent<AnimationComponent>(2, 15, true);
 
     Entity tank = _registry.CreateEntity();
-    tank.AddComponent<TransformComponent>(glm::vec2(10, 30), glm::vec2(1.0, 1.0), 0.0);
-    tank.AddComponent<RigidBodyComponent>(glm::vec2(50, 20));
+    tank.AddComponent<TransformComponent>(glm::vec2(200, 10), glm::vec2(1.0, 1.0), 0.0);
+    tank.AddComponent<RigidBodyComponent>(glm::vec2(-30, 0));
     tank.AddComponent<SpriteComponent>(_assetStore, "tank-image", 2);
+    tank.AddComponent<BoxColliderComponent>(tank.GetComponent<SpriteComponent>().width, tank.GetComponent<SpriteComponent>().height);
 
     Entity truck = _registry.CreateEntity();
-    truck.AddComponent<TransformComponent>(glm::vec2(40, 160), glm::vec2(1.0, 1.0), 0.0);
-    truck.AddComponent<RigidBodyComponent>(glm::vec2(20, 70));
+    truck.AddComponent<TransformComponent>(glm::vec2(10, 10), glm::vec2(1.0, 1.0), 0.0);
+    truck.AddComponent<RigidBodyComponent>(glm::vec2(30, 0));
     truck.AddComponent<SpriteComponent>(_assetStore, "truck-image", 1);
-
-    Entity truckA = _registry.CreateEntity();
-    truckA.AddComponent<TransformComponent>(glm::vec2(20, 160), glm::vec2(1.0, 1.0), 0.0);
-    truckA.AddComponent<RigidBodyComponent>(glm::vec2(30, 20));
-    truckA.AddComponent<SpriteComponent>(_assetStore, "truck-image", 3);
-
-    Entity truckB = _registry.CreateEntity();
-    truckB.AddComponent<TransformComponent>(glm::vec2(50, 160), glm::vec2(1.0, 1.0), 0.0);
-    truckB.AddComponent<RigidBodyComponent>(glm::vec2(50, 20));
-    truckB.AddComponent<SpriteComponent>(_assetStore, "truck-image", 4);
+    truck.AddComponent<BoxColliderComponent>(truck.GetComponent<SpriteComponent>().width, truck.GetComponent<SpriteComponent>().height);
 }
 
 void Game::Setup()
