@@ -11,6 +11,7 @@
 
 #include "Systems/MovementSystem.h"
 #include "Systems/RenderSystem.h"
+#include "Systems/AnimationSystem.h"
 
 Game::Game() : _isRunning(false), _window(nullptr), _renderer(nullptr)
 {
@@ -69,10 +70,13 @@ void Game::LoadLevel(int level)
     // Add the systems that need to be processed in our game
     _registry.AddSystem<MovementSystem>();
     _registry.AddSystem<RenderSystem>();
+    _registry.AddSystem<AnimationSystem>();
 
     // Add assets to the asset store
     _assetStore.AddTexture(_renderer, "tank-image", "./Assets/Images/tank-panther-right.png");
     _assetStore.AddTexture(_renderer, "truck-image", "./Assets/Images/truck-ford-right.png");
+    _assetStore.AddTexture(_renderer, "chopper-image", "./Assets/Images/chopper.png");
+    _assetStore.AddTexture(_renderer, "radar-image", "./Assets/Images/radar.png");
 
     // Load tile atlas texture (tileset image)
     _assetStore.AddTexture(_renderer, "jungle-tilemap-image", "./Assets/Tilemaps/jungle.png");
@@ -150,6 +154,21 @@ void Game::LoadLevel(int level)
     }
 
     // Create entities
+    Entity radar = _registry.CreateEntity();
+    int windowWidth = 0;
+    int windowHeight = 0;
+    SDL_GetWindowSizeInPixels(_window, &windowWidth, &windowHeight);
+    radar.AddComponent<TransformComponent>(glm::vec2(windowWidth - 74, 10), glm::vec2(1.0, 1.0), 0.0);
+    radar.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
+    radar.AddComponent<SpriteComponent>("radar-image", 64, 64, 2);
+    radar.AddComponent<AnimationComponent>(8, 5, true);
+
+    Entity chopper = _registry.CreateEntity();
+    chopper.AddComponent<TransformComponent>(glm::vec2(0, 0), glm::vec2(2.0, 2.0), 0.0);
+    chopper.AddComponent<RigidBodyComponent>(glm::vec2(50, 50));
+    chopper.AddComponent<SpriteComponent>( "chopper-image", 32, 32, 2);
+    chopper.AddComponent<AnimationComponent>(2, 15, true);
+
     Entity tank = _registry.CreateEntity();
     tank.AddComponent<TransformComponent>(glm::vec2(10, 30), glm::vec2(1.0, 1.0), 0.0);
     tank.AddComponent<RigidBodyComponent>(glm::vec2(50, 20));
@@ -232,11 +251,12 @@ void Game::Update()
     // Update previous milliseconds per frame
     millisecondsPreviousFrame = millisecondsCurrent;
 
-    // Update systems
-    _registry.GetSystem<MovementSystem>().Update(deltaTime);
-
     // Update the registry to process the entities that are waiting to be created/deleted
     _registry.Update();
+
+    // Update systems
+    _registry.GetSystem<AnimationSystem>().Update();
+    _registry.GetSystem<MovementSystem>().Update(deltaTime);
 }
 
 void Game::Render()
