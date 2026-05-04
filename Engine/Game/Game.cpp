@@ -13,8 +13,9 @@
 #include "Systems/RenderSystem.h"
 #include "Systems/AnimationSystem.h"
 #include "Systems/CollisionSystem.h"
+#include "Systems/RenderColliderSystem.h"
 
-Game::Game() : _isRunning(false), _window(nullptr), _renderer(nullptr)
+Game::Game() : _isRunning(false), _isDebug(false), _window(nullptr), _renderer(nullptr)
 {
 	LOG_INFO("Game constructor called!");
 }
@@ -73,6 +74,7 @@ void Game::LoadLevel(int level)
     _registry.AddSystem<RenderSystem>();
     _registry.AddSystem<AnimationSystem>();
     _registry.AddSystem<CollisionSystem>();
+    _registry.AddSystem<RenderColliderSystem>();
 
     // Add assets to the asset store
     _assetStore.AddTexture(_renderer, "tank-image", "./Assets/Images/tank-panther-right.png");
@@ -202,6 +204,12 @@ void Game::ProcessInput(SDL_Event& event)
         {
             switch (event.key.scancode)
             {
+                case SDL_SCANCODE_D:
+                {
+                    _isDebug = !_isDebug;                    
+                }
+                break;
+
                 case SDL_SCANCODE_ESCAPE:
                 {
                     _isRunning = false;
@@ -259,6 +267,11 @@ void Game::Render()
     SDL_RenderClear(_renderer);
 
     _registry.GetSystem<RenderSystem>().Update(*_renderer, _assetStore);
+
+    if (_isDebug)
+    {
+        _registry.GetSystem<RenderColliderSystem>().Update(*_renderer);
+    }
 
     SDL_RenderPresent(_renderer);
 }
