@@ -72,6 +72,7 @@ void Game::LoadLevel(int level)
     _registry.AddSystem<MovementSystem>();
     _registry.AddSystem<RenderSystem>();
     _registry.AddSystem<AnimationSystem>();
+    _registry.AddSystem<CollisionSystem>();
 
     // Add assets to the asset store
     _assetStore.AddTexture(_renderer, "tank-image", "./Assets/Images/tank-panther-right.png");
@@ -160,7 +161,6 @@ void Game::LoadLevel(int level)
     int windowHeight = 0;
     SDL_GetWindowSizeInPixels(_window, &windowWidth, &windowHeight);
     radar.AddComponent<TransformComponent>(glm::vec2(windowWidth - 74, 10), glm::vec2(1.0, 1.0), 0.0);
-    radar.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
     radar.AddComponent<SpriteComponent>("radar-image", 64, 64, 2);
     radar.AddComponent<AnimationComponent>(8, 5, true);
 
@@ -171,7 +171,7 @@ void Game::LoadLevel(int level)
     chopper.AddComponent<AnimationComponent>(2, 15, true);
 
     Entity tank = _registry.CreateEntity();
-    tank.AddComponent<TransformComponent>(glm::vec2(200, 10), glm::vec2(1.0, 1.0), 0.0);
+    tank.AddComponent<TransformComponent>(glm::vec2(300, 10), glm::vec2(1.0, 1.0), 0.0);
     tank.AddComponent<RigidBodyComponent>(glm::vec2(-30, 0));
     tank.AddComponent<SpriteComponent>(_assetStore, "tank-image", 2);
     tank.AddComponent<BoxColliderComponent>(tank.GetComponent<SpriteComponent>().width, tank.GetComponent<SpriteComponent>().height);
@@ -250,6 +250,7 @@ void Game::Update()
     // Update systems
     _registry.GetSystem<AnimationSystem>().Update();
     _registry.GetSystem<MovementSystem>().Update(deltaTime);
+    _registry.GetSystem<CollisionSystem>().Update();
 }
 
 void Game::Render()
