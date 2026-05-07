@@ -6,6 +6,11 @@ Entity::Entity(int id, Registry* registry) : _id(id), _registry(registry)
 {
 }
 
+void Entity::Kill()
+{
+    _registry->KillEntity(*this);
+}
+
 int Entity::GetId() const
 {
 	return _id;
@@ -53,20 +58,44 @@ const Signature& System::GetComponentSignature() const
 
 void Registry::Update()
 {
-    // Add the entities that are waiting to be created to the active Systems
+    // Processing the entities that are waiting to be created to the active Systems
     for (Entity entity : _entitiesToBeAdded)
     {
+        // Add entity to according systems
         AddEntityToSystems(entity);
     }
     _entitiesToBeAdded.clear();
 
-    // TODO: Remove the entities that are waiting to be killed from the active Systems
+    // Processing the entities that are waiting to be killed from the active Systems
+    for (Entity entity : _entitiesToBeKilled)
+    {
+        // Remove entities from all systems
+        RemoveEntityFromSystems(entity);
+
+        // Reset entity component signature, which is basically removing all components from it
+        _entityComponentSignatures[entity.GetId()].reset();
+
+        // Make the entity id available to be used
+        _freeIds.push_back(entity.GetId());
+    }
+    _entitiesToBeKilled.clear();
 }
 
 Entity Registry::CreateEntity()
 {
     int entityId;
-    entityId = _numEntities++;
+
+    if (_freeIds.empty())
+    {
+        // If there are no free ids waiting to be reused
+        entityId = _numEntities++;
+    }
+    else
+    {
+        // Reuse and id from the list of previously removed entities
+        entityId = _freeIds.front();
+        _freeIds.pop_front();
+    }
 
     Entity entity(entityId, this);
     _entitiesToBeAdded.insert(entity);
@@ -79,6 +108,11 @@ Entity Registry::CreateEntity()
     LOG_INFO("Entity created with id = %d", entityId);
 
     return entity;
+}
+
+void Registry::KillEntity(Entity entity)
+{
+    _entitiesToBeKilled.insert(entity);
 }
 
 void Registry::AddEntityToSystems(Entity entity)
@@ -98,5 +132,14 @@ void Registry::AddEntityToSystems(Entity entity)
         {
             systemPair.second->AddEntityToSystem(entity);
         }
+    }
+}
+
+void Registry::RemoveEntityFromSystems(Entity entity)
+{
+    // Loop all systems
+    for (std::pair<const std::type_index, std::shared_ptr<System>>& systemPair : _systems)
+    {
+        systemPair.second->RemoveEntityFromSystem(entity);
     }
 }

@@ -6,6 +6,7 @@
 #include <typeindex>
 #include <set>
 #include <memory>
+#include <deque>
 
 #include "Logger/LoggerMacro.h"
 
@@ -46,7 +47,8 @@ public:
 	Entity() : _id(-1), _registry(nullptr) {}
 	Entity(int id, Registry* registry);
 	Entity(const Entity& entity) = default;
-
+	
+	void Kill();
 	int GetId() const;
 
 	Entity& operator=(const Entity& other) = default;
@@ -186,6 +188,7 @@ public:
 	// Entity management
 
 	Entity CreateEntity();
+	void KillEntity(Entity entity);
 
 	// Component management
 
@@ -210,7 +213,9 @@ public:
 	TSystem& GetSystem() const;
 
 	// Checks the component signature of an entity and add the entity to the systems that are interested in it
+	// Add or remove entities from their systems
 	void AddEntityToSystems(Entity entity);
+	void RemoveEntityFromSystems(Entity entity);
 
 private:
 	int _numEntities;
@@ -230,6 +235,9 @@ private:
 	// Set of entities that are flagged to be added or removed in the next registry Update()
 	std::set<Entity> _entitiesToBeAdded;
 	std::set<Entity> _entitiesToBeKilled;
+
+	// Deque of free ids that were previously removed
+	std::deque<int> _freeIds;
 };
 
 template<typename TComponent, typename ...TArgs>
