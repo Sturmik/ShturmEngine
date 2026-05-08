@@ -32,7 +32,7 @@ public:
 		for (int i = 0; i < AccessSystemEntities().size(); ++i)
 		{
 			// Get current entity
-			const Entity& currentEntity = AccessSystemEntities()[i];
+			Entity& currentEntity = AccessSystemEntities()[i];
 
 			// Get transform and box collider component
 			const TransformComponent& currentTransform = currentEntity.GetComponent<TransformComponent>();
@@ -42,7 +42,7 @@ public:
 			for (int j = i + 1; j < AccessSystemEntities().size(); ++j)
 			{
 				// Get other entity
-				const Entity& otherEntity = AccessSystemEntities()[j];
+				Entity& otherEntity = AccessSystemEntities()[j];
 
 				if (currentEntity == otherEntity)
 				{

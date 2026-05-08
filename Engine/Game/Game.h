@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 
 #include "ECS/ECS.h"
+#include "EventBus/EventBus.h"
 #include "AssetStore/AssetStore.h"
 
 const int FPS = 60;
@@ -32,4 +33,5 @@ private:
 
 	Registry _registry;
 	AssetStore _assetStore;
+	EventBus _eventBus;
 };
