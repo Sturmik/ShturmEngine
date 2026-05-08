@@ -15,6 +15,7 @@
 #include "Systems/CollisionSystem.h"
 #include "Systems/RenderColliderSystem.h"
 #include "Systems/DamageSystem.h"
+#include "Systems/KeyboardControlSystem.h"
 
 Game::Game() : _isRunning(false), _isDebug(false), _window(nullptr), _renderer(nullptr)
 {
@@ -80,9 +81,11 @@ void Game::LoadLevel(int level)
     _registry.AddSystem<CollisionSystem>();
     _registry.AddSystem<RenderColliderSystem>();
     _registry.AddSystem<DamageSystem>();
+    _registry.AddSystem<KeyboardControlSystem>();
 
     // Perform the subscription of the events for all systems
     _registry.GetSystem<DamageSystem>().SubscribeToEvents(_eventBus);
+    _registry.GetSystem<KeyboardControlSystem>().SubscribeToEvents(_eventBus);
 
     // Add assets to the asset store
     _assetStore.AddTexture(_renderer, "tank-image", "./Assets/Images/tank-panther-right.png");
@@ -210,6 +213,8 @@ void Game::ProcessInput(SDL_Event& event)
 
         case SDL_EVENT_KEY_DOWN:
         {
+            _eventBus.EmitEvent<KeyPressedEvent>(event.key.scancode);
+
             switch (event.key.scancode)
             {
                 case SDL_SCANCODE_D:
