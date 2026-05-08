@@ -90,7 +90,7 @@ void Game::LoadLevel(int level)
     // Add assets to the asset store
     _assetStore.AddTexture(_renderer, "tank-image", "./Assets/Images/tank-panther-right.png");
     _assetStore.AddTexture(_renderer, "truck-image", "./Assets/Images/truck-ford-right.png");
-    _assetStore.AddTexture(_renderer, "chopper-image", "./Assets/Images/chopper.png");
+    _assetStore.AddTexture(_renderer, "chopper-image", "./Assets/Images/chopper-spritesheet.png");
     _assetStore.AddTexture(_renderer, "radar-image", "./Assets/Images/radar.png");
 
     // Load tile atlas texture (tileset image)
@@ -179,9 +179,17 @@ void Game::LoadLevel(int level)
 
     Entity chopper = _registry.CreateEntity();
     chopper.AddComponent<TransformComponent>(glm::vec2(50, 50), glm::vec2(2.0, 2.0), 0.0);
-    chopper.AddComponent<RigidBodyComponent>(glm::vec2(50, 50));
+    chopper.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
     chopper.AddComponent<SpriteComponent>( "chopper-image", 32, 32, 2);
     chopper.AddComponent<AnimationComponent>(2, 15, true);
+    chopper.AddComponent<KeyboardControlledComponent>(glm::vec2(0, -40), glm::vec2(40, 0), glm::vec2(0, 40), glm::vec2(-40, 0));
+
+    Entity chopperb = _registry.CreateEntity();
+    chopperb.AddComponent<TransformComponent>(glm::vec2(100, 50), glm::vec2(2.0, 2.0), 0.0);
+    chopperb.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
+    chopperb.AddComponent<SpriteComponent>("chopper-image", 32, 32, 2);
+    chopperb.AddComponent<AnimationComponent>(2, 15, true);
+    chopperb.AddComponent<KeyboardControlledComponent>(glm::vec2(0, -80), glm::vec2(80, 0), glm::vec2(0, 80), glm::vec2(-80, 0));
 
     Entity tank = _registry.CreateEntity();
     tank.AddComponent<TransformComponent>(glm::vec2(300, 10), glm::vec2(1.0, 1.0), 0.0);
