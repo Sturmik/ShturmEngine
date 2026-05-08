@@ -181,7 +181,8 @@ private:
 class Registry
 {
 public: 
-	Registry() : _numEntities(0) {}
+	Registry() : _numEntities(0) { LOG_INFO("Registry constructor called!"); }
+	~Registry() { LOG_INFO("Registry destructor called!"); }
 
 	void Update();
 

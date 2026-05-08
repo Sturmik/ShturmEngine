@@ -3,6 +3,7 @@
 #include "ECS/ECS.h"
 #include "Components/TransformComponent.h"
 #include "Components/BoxColliderComponent.h"
+#include "Events/CollisionEvent.h"
 
 class CollisionSystem : public System
 {
@@ -13,7 +14,7 @@ public:
 		RequireComponent<BoxColliderComponent>();
 	}
 
-	void Update()
+	void Update(EventBus& eventBus)
 	{
 		// Loop all entities that the system is interested in
 		for (int i = 0; i < AccessSystemEntities().size(); ++i)
@@ -67,6 +68,8 @@ public:
 				{
 					currentBoxCollider.isColliding = true;
 					otherBoxCollider.isColliding = true;
+
+					eventBus.EmitEvent<CollisionEvent>(currentEntity, otherEntity);
 
 					LOG_INFO("Entity %d collided with entity %d", AccessSystemEntities()[i].GetId(), AccessSystemEntities()[j].GetId());
 				}

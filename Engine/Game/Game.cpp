@@ -14,6 +14,7 @@
 #include "Systems/AnimationSystem.h"
 #include "Systems/CollisionSystem.h"
 #include "Systems/RenderColliderSystem.h"
+#include "Systems/DamageSystem.h"
 
 Game::Game() : _isRunning(false), _isDebug(false), _window(nullptr), _renderer(nullptr)
 {
@@ -69,12 +70,19 @@ void Game::Initialize()
 
 void Game::LoadLevel(int level)
 {
+    // Reset all event handlers for the current frame
+    _eventBus.Reset();
+
     // Add the systems that need to be processed in our game
     _registry.AddSystem<MovementSystem>();
     _registry.AddSystem<RenderSystem>();
     _registry.AddSystem<AnimationSystem>();
     _registry.AddSystem<CollisionSystem>();
     _registry.AddSystem<RenderColliderSystem>();
+    _registry.AddSystem<DamageSystem>();
+
+    // Perform the subscription of the events for all systems
+    _registry.GetSystem<DamageSystem>().SubscribeToEvents(_eventBus);
 
     // Add assets to the asset store
     _assetStore.AddTexture(_renderer, "tank-image", "./Assets/Images/tank-panther-right.png");
@@ -258,7 +266,7 @@ void Game::Update()
     // Update systems
     _registry.GetSystem<AnimationSystem>().Update();
     _registry.GetSystem<MovementSystem>().Update(deltaTime);
-    _registry.GetSystem<CollisionSystem>().Update();
+    _registry.GetSystem<CollisionSystem>().Update(_eventBus);
 }
 
 void Game::Render()

@@ -57,6 +57,12 @@ public:
 	{
 		LOG_INFO("EventBus destructor called");
 	}
+
+	// Clears subscriber list
+	void Reset()
+	{
+		_subscribers.clear();
+	}
 	
 	// Subscribe to an event type <T>
 	// A listener subscribes to an event
@@ -79,12 +85,12 @@ public:
 	template<typename TEvent, typename ...TArgs>
 	void EmitEvent(TArgs && ...args)
 	{
-		std::unique_ptr<HandlersList> handlers = _subscribers[typeid(TEvent)].get();
+		HandlersList* handlers = _subscribers[typeid(TEvent)].get();
 		if (handlers)
 		{
 			for (auto it = handlers->begin(); it != handlers->end(); ++it)
 			{
-				HandlersList& handler = it->get();
+				IEventCallback* handler = it->get();
 				TEvent event(std::forward<TArgs>(args)...);
 				handler->Execute(event);
 			}
