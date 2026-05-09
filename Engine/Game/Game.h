@@ -6,6 +6,8 @@
 #include "EventBus/EventBus.h"
 #include "AssetStore/AssetStore.h"
 
+#include <glm/glm.hpp>
+
 const int FPS = 60;
 const int MILLISECONDS_PER_FRAME = 1000 / FPS;
 
@@ -24,12 +26,20 @@ public:
 
 	bool IsGameRunning();
 
+	glm::vec2 GetWindowSize();
+
+	glm::vec2 GetMapSize();
+
 private:
 	bool _isRunning;
 	bool _isDebug;
 
 	SDL_Window* _window;
 	SDL_Renderer* _renderer;
+	SDL_FRect _camera;
+
+	float _mapWidth;
+	float _mapHeight;
 
 	Registry _registry;
 	AssetStore _assetStore;

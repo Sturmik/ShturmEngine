@@ -17,7 +17,7 @@ public:
 		RequireComponent<SpriteComponent>();
 	}
 
-	void Update(SDL_Renderer& renderer, AssetStore& assetStore)
+	void Update(SDL_Renderer& renderer, AssetStore& assetStore, SDL_FRect& camera)
 	{
 		// Sort entities by their z-index before rendering them
 		std::sort(AccessSystemEntities().begin(), AccessSystemEntities().end(), [](const Entity& a, const Entity& b)
@@ -40,8 +40,8 @@ public:
 
 			// Set the destination rectangle with the x, y position to be rendered
 			SDL_FRect dstRect = {
-				transform.position.x,
-				transform.position.y,
+				transform.position.x - camera.x,
+				transform.position.y - camera.y,
 				sprite.width * transform.scale.x,
 				sprite.height * transform.scale.y
 			};

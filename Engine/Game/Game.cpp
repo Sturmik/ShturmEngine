@@ -1,7 +1,6 @@
 #include "Game.h"
 
 #include <SDL3_image/SDL_image.h>
-#include <glm/glm.hpp>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -16,8 +15,9 @@
 #include "Systems/RenderColliderSystem.h"
 #include "Systems/DamageSystem.h"
 #include "Systems/KeyboardControlSystem.h"
+#include "Systems/CameraMovementSystem.h"
 
-Game::Game() : _isRunning(false), _isDebug(false), _window(nullptr), _renderer(nullptr)
+Game::Game() : _isRunning(false), _isDebug(false), _window(nullptr), _renderer(nullptr), _mapWidth(0), _mapHeight(0)
 {
 	LOG_INFO("Game constructor called!");
 }
@@ -67,6 +67,13 @@ void Game::Initialize()
     }
 
     _isRunning = true;
+
+    // Initialize the camera view with the entire screen area
+    _camera.x = 0;
+    _camera.y = 0;
+    glm::vec2 windowSize = GetWindowSize();
+    _camera.w = windowSize.x;
+    _camera.h = windowSize.y;
 }
 
 void Game::LoadLevel(int level)
@@ -82,6 +89,7 @@ void Game::LoadLevel(int level)
     _registry.AddSystem<RenderColliderSystem>();
     _registry.AddSystem<DamageSystem>();
     _registry.AddSystem<KeyboardControlSystem>();
+    _registry.AddSystem<CameraMovementSystem>();
 
     // Perform the subscription of the events for all systems
     _registry.GetSystem<DamageSystem>().SubscribeToEvents(_eventBus);
@@ -118,6 +126,7 @@ void Game::LoadLevel(int level)
 
         std::string line;
         int row = 0;
+        int max_num_of_col = 0;
 
         // Read map row-by-row
         while (std::getline(file, line))
@@ -158,10 +167,16 @@ void Game::LoadLevel(int level)
                 col++;
             }
 
+            max_num_of_col = std::max(max_num_of_col, col);
+
             row++;
         }
 
         file.close();
+
+        // Update map width and height variables
+        _mapWidth = max_num_of_col * TILE_WIDTH * TILE_SCALE;
+        _mapHeight = row * TILE_HEIGHT * TILE_SCALE;
     }
     else 
     {
@@ -182,14 +197,8 @@ void Game::LoadLevel(int level)
     chopper.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
     chopper.AddComponent<SpriteComponent>( "chopper-image", 32, 32, 2);
     chopper.AddComponent<AnimationComponent>(2, 15, true);
-    chopper.AddComponent<KeyboardControlledComponent>(glm::vec2(0, -40), glm::vec2(40, 0), glm::vec2(0, 40), glm::vec2(-40, 0));
-
-    Entity chopperb = _registry.CreateEntity();
-    chopperb.AddComponent<TransformComponent>(glm::vec2(100, 50), glm::vec2(2.0, 2.0), 0.0);
-    chopperb.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
-    chopperb.AddComponent<SpriteComponent>("chopper-image", 32, 32, 2);
-    chopperb.AddComponent<AnimationComponent>(2, 15, true);
-    chopperb.AddComponent<KeyboardControlledComponent>(glm::vec2(0, -80), glm::vec2(80, 0), glm::vec2(0, 80), glm::vec2(-80, 0));
+    chopper.AddComponent<KeyboardControlledComponent>(glm::vec2(0, -120), glm::vec2(120, 0), glm::vec2(0, 120), glm::vec2(-120, 0));
+    chopper.AddComponent<CameraFollowComponent>();
 
     Entity tank = _registry.CreateEntity();
     tank.AddComponent<TransformComponent>(glm::vec2(300, 10), glm::vec2(1.0, 1.0), 0.0);
@@ -213,6 +222,15 @@ void Game::ProcessInput(SDL_Event& event)
 {
     switch (event.type)
     {
+        case SDL_EVENT_WINDOW_RESIZED:
+        {
+            glm::vec2 windowSize = GetWindowSize();
+            _camera.x = _camera.y = 0;
+            _camera.w = windowSize.x;
+            _camera.h = windowSize.y;
+        }
+        break;
+
         case SDL_EVENT_QUIT:
         {
             _isRunning = false;
@@ -280,6 +298,7 @@ void Game::Update()
     _registry.GetSystem<AnimationSystem>().Update();
     _registry.GetSystem<MovementSystem>().Update(deltaTime);
     _registry.GetSystem<CollisionSystem>().Update(_eventBus);
+    _registry.GetSystem<CameraMovementSystem>().Update(_camera, GetMapSize());
 }
 
 void Game::Render()
@@ -287,7 +306,7 @@ void Game::Render()
     SDL_SetRenderDrawColor(_renderer, 21, 21, 21, 255);
     SDL_RenderClear(_renderer);
 
-    _registry.GetSystem<RenderSystem>().Update(*_renderer, _assetStore);
+    _registry.GetSystem<RenderSystem>().Update(*_renderer, _assetStore, _camera);
 
     if (_isDebug)
     {
@@ -317,4 +336,18 @@ void Game::Destroy()
 bool Game::IsGameRunning()
 {
     return _isRunning;
+}
+
+glm::vec2 Game::GetWindowSize()
+{
+    int windowWidth = 0;
+    int windowHeight = 0;
+    SDL_GetWindowSize(_window, &windowWidth, &windowHeight);
+
+    return glm::vec2(windowWidth, windowHeight);
+}
+
+glm::vec2 Game::GetMapSize()
+{
+    return glm::vec2(_mapWidth, _mapHeight);
 }
