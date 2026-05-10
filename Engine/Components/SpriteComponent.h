@@ -7,14 +7,14 @@
 
 struct SpriteComponent
 {
-	SpriteComponent(std::string assetId = "", float width = 0.0, float height = 0.0, unsigned int zIndex = 0, float srcRectX = 0.0, float srcRectY = 0.0)
-		: assetId(assetId), width(width), height(height), zIndex(zIndex)
+	SpriteComponent(std::string assetId = "", float width = 0.0, float height = 0.0, unsigned int zIndex = 0, bool isFixed = false, float srcRectX = 0.0, float srcRectY = 0.0)
+		: assetId(assetId), width(width), height(height), zIndex(zIndex), isFixed(isFixed)
 	{
 		this->srcRect = { srcRectX, srcRectY, width, height };
 	}
 
-	SpriteComponent(const AssetStore& assetStore, std::string assetId, unsigned int zIndex = 0, float srcRectX = 0.0, float srcRectY = 0.0)
-		: assetId(assetId), zIndex(zIndex)
+	SpriteComponent(const AssetStore& assetStore, std::string assetId, unsigned int zIndex = 0, bool isFixed = false, float srcRectX = 0.0, float srcRectY = 0.0)
+		: assetId(assetId), zIndex(zIndex), isFixed(isFixed)
 		{
 			SDL_GetTextureSize(assetStore.GetTexture(assetId), &width, &height);
 
@@ -27,4 +27,6 @@ struct SpriteComponent
 	SDL_FRect srcRect;
 
 	unsigned int zIndex;
+
+	bool isFixed;
 };

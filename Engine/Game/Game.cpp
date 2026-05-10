@@ -160,6 +160,7 @@ void Game::LoadLevel(int level)
                     TILE_WIDTH,
                     TILE_HEIGHT,
                     0,
+                    false,
                     srcCol * TILE_WIDTH,
                     srcRow * TILE_HEIGHT
                 );
@@ -189,7 +190,7 @@ void Game::LoadLevel(int level)
     int windowHeight = 0;
     SDL_GetWindowSizeInPixels(_window, &windowWidth, &windowHeight);
     radar.AddComponent<TransformComponent>(glm::vec2(windowWidth - 74, 10), glm::vec2(1.0, 1.0), 0.0);
-    radar.AddComponent<SpriteComponent>("radar-image", 64, 64, 2);
+    radar.AddComponent<SpriteComponent>("radar-image", 64, 64, 2, true);
     radar.AddComponent<AnimationComponent>(8, 5, true);
 
     Entity chopper = _registry.CreateEntity();
