@@ -23,8 +23,6 @@ struct ProjectileEmitterComponent
 		projectileDurationInMs(projectileDurationInMs),
 		hitPercentDamage(hitPercentDamage),
 		isFriendly(isFriendly),
-		lastEmissionTimeInMs(0)
-	{
-		lastEmissionTimeInMs = SDL_GetTicks();
-	}
+		lastEmissionTimeInMs(SDL_GetTicks())
+	{}
 };

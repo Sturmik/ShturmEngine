@@ -9,11 +9,11 @@ struct AnimationComponent
 		frameRateSpeedPerSecond(frameRateSpeedPerSecond), 
 		isLoop(isLoop), 
 		currentFrame(1),
-		startTime(SDL_GetTicks()){}
+		startTimeInMs(SDL_GetTicks()){}
 
 	int numFrames;
 	int currentFrame;
 	int frameRateSpeedPerSecond;
 	bool isLoop;
-	int startTime;
+	int startTimeInMs;
 };

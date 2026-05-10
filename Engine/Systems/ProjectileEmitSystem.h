@@ -5,6 +5,7 @@
 #include "Components/RigidbodyComponent.h"
 #include "Components/SpriteComponent.h"
 #include "Components/ProjectileEmitterComponent.h"
+#include "Components/LifecycleComponent.h"
 
 class ProjectileEmitSystem : public System
 {
@@ -15,7 +16,7 @@ public:
 		RequireComponent<TransformComponent>();
 	}
 
-	void Update(AssetStore& assetStore, Registry& registry)
+	void Update(AssetStore& assetStore, Registry& registry, std::string projectileTextureKey)
 	{
 		// Loop all entities that the system is interested in
 		for (Entity& entity : AccessSystemEntities())
@@ -40,15 +41,16 @@ public:
 				projectile.AddComponent<TransformComponent>(projectilePosition, glm::vec2(1.0, 1.0), 0);
 				projectile.AddComponent<RigidBodyComponent>(projectileEmitter.projectileVelocity);
 				
-				std::string textureKey = "bullet-image";
-				projectile.AddComponent<SpriteComponent>(assetStore, textureKey, 4);
+				projectile.AddComponent<SpriteComponent>(assetStore, projectileTextureKey, 4);
 				
 				float textureWidth = 0.0f;
 				float textureHeight = 0.0f;
-				SDL_GetTextureSize(assetStore.GetTexture(textureKey),
+				SDL_GetTextureSize(assetStore.GetTexture(projectileTextureKey),
 					&textureWidth,
 					&textureHeight);
 				projectile.AddComponent<BoxColliderComponent>(textureWidth, textureHeight);
+
+				projectile.AddComponent<LifecycleComponent>(projectileEmitter.projectileDurationInMs);
 
 				// Update the projectile emitter component last emission to the current milliseconds
 				projectileEmitter.lastEmissionTimeInMs = SDL_GetTicks();

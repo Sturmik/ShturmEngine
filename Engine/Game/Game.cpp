@@ -17,6 +17,7 @@
 #include "Systems/KeyboardControlSystem.h"
 #include "Systems/CameraMovementSystem.h"
 #include "Systems/ProjectileEmitSystem.h"
+#include "Systems/LifecycleSystem.h"
 
 #include "Components/HealthComponent.h"
 
@@ -94,6 +95,7 @@ void Game::LoadLevel(int level)
     _registry.AddSystem<KeyboardControlSystem>();
     _registry.AddSystem<CameraMovementSystem>();
     _registry.AddSystem<ProjectileEmitSystem>();
+    _registry.AddSystem<LifecycleSystem>();
 
     // Perform the subscription of the events for all systems
     _registry.GetSystem<DamageSystem>().SubscribeToEvents(_eventBus);
@@ -212,7 +214,7 @@ void Game::LoadLevel(int level)
     tank.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
     tank.AddComponent<SpriteComponent>(_assetStore, "tank-image", 2);
     tank.AddComponent<BoxColliderComponent>(tank.GetComponent<SpriteComponent>().width, tank.GetComponent<SpriteComponent>().height);
-    tank.AddComponent<ProjectileEmitterComponent>(glm::vec2(100.0, 0.0), 5000, 10000, 0, false);
+    tank.AddComponent<ProjectileEmitterComponent>(glm::vec2(100.0, 0.0), 3000, 4000, 0, false);
     tank.AddComponent<HealthComponent>(100);
 
     Entity truck = _registry.CreateEntity();
@@ -220,7 +222,7 @@ void Game::LoadLevel(int level)
     truck.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
     truck.AddComponent<SpriteComponent>(_assetStore, "truck-image", 1);
     truck.AddComponent<BoxColliderComponent>(truck.GetComponent<SpriteComponent>().width, truck.GetComponent<SpriteComponent>().height);
-    truck.AddComponent<ProjectileEmitterComponent>(glm::vec2(0.0, 100.0), 2000, 10000, 0, false);
+    truck.AddComponent<ProjectileEmitterComponent>(glm::vec2(0.0, 100.0), 1000, 5000, 0, false);
     truck.AddComponent<HealthComponent>(100);
 }
 
@@ -310,7 +312,8 @@ void Game::Update()
     _registry.GetSystem<MovementSystem>().Update(deltaTime);
     _registry.GetSystem<CollisionSystem>().Update(_eventBus);
     _registry.GetSystem<CameraMovementSystem>().Update(_camera, GetMapSize());
-    _registry.GetSystem<ProjectileEmitSystem>().Update(_assetStore, _registry);
+    _registry.GetSystem<ProjectileEmitSystem>().Update(_assetStore, _registry, "bullet-image");
+    _registry.GetSystem<LifecycleSystem>().Update();
 }
 
 void Game::Render()
