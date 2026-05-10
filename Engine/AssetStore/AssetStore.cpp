@@ -14,6 +14,12 @@ AssetStore::~AssetStore()
 	LOG_INFO("AssetStore destructor called");
 }
 
+AssetStore& AssetStore::Get()
+{
+	static AssetStore assetStore;
+	return assetStore;
+}
+
 void AssetStore::ClearAssets()
 {
 	for (std::pair<const std::string, SDL_Texture*> texture : _textures)

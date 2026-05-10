@@ -7,13 +7,15 @@
 class AssetStore
 {
 public:
-	AssetStore();
-	~AssetStore();
+	static AssetStore& Get();
 
 	void ClearAssets();
 	void AddTexture(SDL_Renderer* renderer, const std::string& assetId, const std::string& filePath);
 	SDL_Texture* GetTexture(const std::string& assetId) const;
 
 private:
+	AssetStore();
+	~AssetStore();
+
 	std::map<std::string, SDL_Texture*> _textures;
 };

@@ -100,16 +100,17 @@ void Game::LoadLevel(int level)
     // Perform the subscription of the events for all systems
     _registry.GetSystem<DamageSystem>().SubscribeToEvents(_eventBus);
     _registry.GetSystem<KeyboardControlSystem>().SubscribeToEvents(_eventBus);
+    _registry.GetSystem<ProjectileEmitSystem>().SubscribeToEvents(_eventBus);
 
     // Add assets to the asset store
-    _assetStore.AddTexture(_renderer, "tank-image", "./Assets/Images/tank-panther-right.png");
-    _assetStore.AddTexture(_renderer, "truck-image", "./Assets/Images/truck-ford-right.png");
-    _assetStore.AddTexture(_renderer, "chopper-image", "./Assets/Images/chopper-spritesheet.png");
-    _assetStore.AddTexture(_renderer, "radar-image", "./Assets/Images/radar.png");
-    _assetStore.AddTexture(_renderer, "bullet-image", "./Assets/Images/bullet.png");
+    AssetStore::Get().AddTexture(_renderer, "tank-image", "./Assets/Images/tank-panther-right.png");
+    AssetStore::Get().AddTexture(_renderer, "truck-image", "./Assets/Images/truck-ford-right.png");
+    AssetStore::Get().AddTexture(_renderer, "chopper-image", "./Assets/Images/chopper-spritesheet.png");
+    AssetStore::Get().AddTexture(_renderer, "radar-image", "./Assets/Images/radar.png");
+    AssetStore::Get().AddTexture(_renderer, "bullet-image", "./Assets/Images/bullet.png");
 
     // Load tile atlas texture (tileset image)
-    _assetStore.AddTexture(_renderer, "jungle-tilemap-image", "./Assets/Tilemaps/jungle.png");
+    AssetStore::Get().AddTexture(_renderer, "jungle-tilemap-image", "./Assets/Tilemaps/jungle.png");
     // Open tilemap data (grid of tile indices)
     std::ifstream file("./Assets/Tilemaps/jungle.map");
     if (file.is_open()) 
@@ -117,7 +118,7 @@ void Game::LoadLevel(int level)
         // Query atlas (tileset) dimensions
         float atlasWidth = 0.0f;
         float atlasHeight = 0.0f;
-        SDL_GetTextureSize( _assetStore.GetTexture("jungle-tilemap-image"),
+        SDL_GetTextureSize( AssetStore::Get().GetTexture("jungle-tilemap-image"),
             &atlasWidth,
             &atlasHeight );
 
@@ -208,21 +209,22 @@ void Game::LoadLevel(int level)
     chopper.AddComponent<KeyboardControlledComponent>(glm::vec2(0, -120), glm::vec2(120, 0), glm::vec2(0, 120), glm::vec2(-120, 0));
     chopper.AddComponent<CameraFollowComponent>();
     chopper.AddComponent<HealthComponent>(100);
+    chopper.AddComponent<ProjectileEmitterComponent>(glm::vec2(150.0, 150.0), 0, 5000, 0, true, "bullet-image");
 
     Entity tank = _registry.CreateEntity();
     tank.AddComponent<TransformComponent>(glm::vec2(300, 10), glm::vec2(1.0, 1.0), 0.0);
     tank.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
-    tank.AddComponent<SpriteComponent>(_assetStore, "tank-image", 2);
+    tank.AddComponent<SpriteComponent>(AssetStore::Get(), "tank-image", 2);
     tank.AddComponent<BoxColliderComponent>(tank.GetComponent<SpriteComponent>().width, tank.GetComponent<SpriteComponent>().height);
-    tank.AddComponent<ProjectileEmitterComponent>(glm::vec2(100.0, 0.0), 3000, 4000, 0, false);
+    tank.AddComponent<ProjectileEmitterComponent>(glm::vec2(100.0, 0.0), 3000, 4000, 0, false, "bullet-image");
     tank.AddComponent<HealthComponent>(100);
 
     Entity truck = _registry.CreateEntity();
     truck.AddComponent<TransformComponent>(glm::vec2(10, 10), glm::vec2(1.0, 1.0), 0.0);
     truck.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
-    truck.AddComponent<SpriteComponent>(_assetStore, "truck-image", 1);
+    truck.AddComponent<SpriteComponent>(AssetStore::Get(), "truck-image", 1);
     truck.AddComponent<BoxColliderComponent>(truck.GetComponent<SpriteComponent>().width, truck.GetComponent<SpriteComponent>().height);
-    truck.AddComponent<ProjectileEmitterComponent>(glm::vec2(0.0, 100.0), 1000, 5000, 0, false);
+    truck.AddComponent<ProjectileEmitterComponent>(glm::vec2(0.0, 100.0), 1000, 5000, 0, false, "bullet-image");
     truck.AddComponent<HealthComponent>(100);
 }
 
@@ -312,7 +314,7 @@ void Game::Update()
     _registry.GetSystem<MovementSystem>().Update(deltaTime);
     _registry.GetSystem<CollisionSystem>().Update(_eventBus);
     _registry.GetSystem<CameraMovementSystem>().Update(_camera, GetMapSize());
-    _registry.GetSystem<ProjectileEmitSystem>().Update(_assetStore, _registry, "bullet-image");
+    _registry.GetSystem<ProjectileEmitSystem>().Update( _registry);
     _registry.GetSystem<LifecycleSystem>().Update();
 }
 
@@ -321,7 +323,7 @@ void Game::Render()
     SDL_SetRenderDrawColor(_renderer, 21, 21, 21, 255);
     SDL_RenderClear(_renderer);
 
-    _registry.GetSystem<RenderSystem>().Update(*_renderer, _assetStore, _camera);
+    _registry.GetSystem<RenderSystem>().Update(*_renderer, AssetStore::Get(), _camera);
 
     if (_isDebug)
     {

@@ -42,6 +42,5 @@ private:
 	float _mapHeight;
 
 	Registry _registry;
-	AssetStore _assetStore;
 	EventBus _eventBus;
 };

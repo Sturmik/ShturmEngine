@@ -16,6 +16,11 @@ int Entity::GetId() const
 	return _id;
 }
 
+Registry& Entity::AccessRegistry()
+{
+    return *_registry;
+}
+
 void System::AddEntityToSystem(Entity entity)
 {
     auto it = std::find_if(_entities.begin(), _entities.end(),

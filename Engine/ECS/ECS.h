@@ -67,6 +67,8 @@ public:
 	template<typename TComponent>
 	TComponent& GetComponent() const;
 
+	Registry& AccessRegistry();
+
 private:
 	Registry* _registry;
 

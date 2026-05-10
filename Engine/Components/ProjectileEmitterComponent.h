@@ -13,16 +13,20 @@ struct ProjectileEmitterComponent
 	bool isFriendly;
 	int lastEmissionTimeInMs;
 
+	std::string projectileTextureKey;
+
 	ProjectileEmitterComponent(glm::vec2 projectileVelocity = glm::vec2(0),
 		int repeatFrequency = 0,
 		int projectileDurationInMs = 10000,
 		int hitPercentDamage = 10,
-		bool isFriendly = false)
+		bool isFriendly = false,
+		std::string projectileTextureKey = "")
 		: projectileVelocity(projectileVelocity),
 		repeatFrequency(repeatFrequency),
 		projectileDurationInMs(projectileDurationInMs),
 		hitPercentDamage(hitPercentDamage),
 		isFriendly(isFriendly),
+		projectileTextureKey(projectileTextureKey),
 		lastEmissionTimeInMs(SDL_GetTicks())
 	{}
 };
