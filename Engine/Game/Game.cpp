@@ -18,7 +18,9 @@
 #include "Systems/CameraMovementSystem.h"
 #include "Systems/ProjectileEmitSystem.h"
 
-Game::Game() : _isRunning(false), _isDebug(false), _window(nullptr), _renderer(nullptr), _mapWidth(0), _mapHeight(0)
+#include "Components/HealthComponent.h"
+
+Game::Game() : _isRunning(false), _isDebug(false), _window(nullptr), _renderer(nullptr), _camera(), _mapWidth(0), _mapHeight(0)
 {
 	LOG_INFO("Game constructor called!");
 }
@@ -203,6 +205,7 @@ void Game::LoadLevel(int level)
     chopper.AddComponent<AnimationComponent>(2, 15, true);
     chopper.AddComponent<KeyboardControlledComponent>(glm::vec2(0, -120), glm::vec2(120, 0), glm::vec2(0, 120), glm::vec2(-120, 0));
     chopper.AddComponent<CameraFollowComponent>();
+    chopper.AddComponent<HealthComponent>(100);
 
     Entity tank = _registry.CreateEntity();
     tank.AddComponent<TransformComponent>(glm::vec2(300, 10), glm::vec2(1.0, 1.0), 0.0);
@@ -210,6 +213,7 @@ void Game::LoadLevel(int level)
     tank.AddComponent<SpriteComponent>(_assetStore, "tank-image", 2);
     tank.AddComponent<BoxColliderComponent>(tank.GetComponent<SpriteComponent>().width, tank.GetComponent<SpriteComponent>().height);
     tank.AddComponent<ProjectileEmitterComponent>(glm::vec2(100.0, 0.0), 5000, 10000, 0, false);
+    tank.AddComponent<HealthComponent>(100);
 
     Entity truck = _registry.CreateEntity();
     truck.AddComponent<TransformComponent>(glm::vec2(10, 10), glm::vec2(1.0, 1.0), 0.0);
@@ -217,6 +221,7 @@ void Game::LoadLevel(int level)
     truck.AddComponent<SpriteComponent>(_assetStore, "truck-image", 1);
     truck.AddComponent<BoxColliderComponent>(truck.GetComponent<SpriteComponent>().width, truck.GetComponent<SpriteComponent>().height);
     truck.AddComponent<ProjectileEmitterComponent>(glm::vec2(0.0, 100.0), 2000, 10000, 0, false);
+    truck.AddComponent<HealthComponent>(100);
 }
 
 void Game::Setup()
