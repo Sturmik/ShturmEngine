@@ -21,8 +21,9 @@ public:
 	void OnCollision(CollisionEvent& event)
 	{
 		LOG_INFO("Damage system received an event collision between entities %d and %d", event.a.GetId(), event.b.GetId());
-		event.a.Kill();
-		event.b.Kill();
+		
+		// event.a.Kill();
+		// event.b.Kill();
 	}
 
 	void Update()

@@ -77,6 +77,8 @@ void Registry::Update()
 
         // Make the entity id available to be used
         _freeIds.push_back(entity.GetId());
+        
+        LOG_INFO("Entity %d is killed", entity.GetId());
     }
     _entitiesToBeKilled.clear();
 }

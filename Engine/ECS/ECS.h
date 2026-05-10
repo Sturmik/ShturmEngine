@@ -63,7 +63,7 @@ public:
 	template<typename TComponent>
 	void RemoveComponent();
 	template<typename TComponent>
-	void HasComponent() const;
+	bool HasComponent() const;
 	template<typename TComponent>
 	TComponent& GetComponent() const;
 
@@ -352,9 +352,9 @@ void Entity::RemoveComponent()
 }
 
 template<typename TComponent>
-void Entity::HasComponent() const
+bool Entity::HasComponent() const
 {
-	_registry->HasComponent<TComponent>(*this);
+	return _registry->HasComponent<TComponent>(*this);
 }
 
 template<typename TComponent>
