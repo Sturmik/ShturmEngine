@@ -154,6 +154,7 @@ void Game::LoadLevel(int level)
 
                 // Create tile entity
                 Entity tile = _registry.CreateEntity();
+                tile.Group("tiles");
 
                 // World position (grid-based placement)
                 tile.AddComponent<TransformComponent>(
@@ -202,6 +203,7 @@ void Game::LoadLevel(int level)
     radar.AddComponent<AnimationComponent>(8, 5, true);
 
     Entity chopper = _registry.CreateEntity();
+    chopper.Tag("player");
     chopper.AddComponent<TransformComponent>(glm::vec2(50, 50), glm::vec2(2.0, 2.0), 0.0);
     chopper.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
     chopper.AddComponent<SpriteComponent>( "chopper-image", 32, 32, 2);
@@ -212,6 +214,7 @@ void Game::LoadLevel(int level)
     chopper.AddComponent<ProjectileEmitterComponent>(glm::vec2(150.0, 150.0), 0, 5000, 0, true, "bullet-image");
 
     Entity tank = _registry.CreateEntity();
+    tank.Group("enemies");
     tank.AddComponent<TransformComponent>(glm::vec2(300, 10), glm::vec2(1.0, 1.0), 0.0);
     tank.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
     tank.AddComponent<SpriteComponent>(AssetStore::Get(), "tank-image", 2);

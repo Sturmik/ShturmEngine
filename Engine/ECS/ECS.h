@@ -7,6 +7,7 @@
 #include <set>
 #include <memory>
 #include <deque>
+#include <unordered_map>
 
 #include "Logger/LoggerMacro.h"
 
@@ -51,13 +52,21 @@ public:
 	void Kill();
 	int GetId() const;
 
+	// Manage entity tags and groups
+	void Tag(const std::string& tag);
+	bool HasTag(const std::string& tag) const;
+	void Group(const std::string& group);
+	bool BelongsToGroup(const std::string& group) const;
+
 	Entity& operator=(const Entity& other) = default;
 
+	// Operator overloading for entity objects
 	bool operator ==(const Entity& other) const { return _id == other._id; }
 	bool operator !=(const Entity& other) const { return _id != other._id; }
 	bool operator >(const Entity & other) const { return _id > other._id; }
 	bool operator <(const Entity& other) const { return _id < other._id; }
 
+	// Manage entity components
 	template<typename TComponent, typename ...TArgs>
 	void AddComponent(TArgs&& ...args);
 	template<typename TComponent>
@@ -70,6 +79,7 @@ public:
 	Registry& AccessRegistry();
 
 private:
+	// Hold a pointer to the entity's owner registry
 	Registry* _registry;
 
 	int _id;
@@ -193,6 +203,18 @@ public:
 	Entity CreateEntity();
 	void KillEntity(Entity entity);
 
+	// Tag management
+	void TagEntity(Entity entity, const std::string& tag);
+	bool EntityHasTag(Entity entity, const std::string& tag) const;
+	Entity GetEntityByTag(const std::string& tag) const;
+	void RemoveEntityTag(Entity entity);
+
+	// Group management
+	void GroupEntity(Entity entity, const std::string& group);
+	bool EntityBelongsToGroup(Entity entity, const std::string& group) const;
+	std::vector<Entity> GetEntitiesByGroup(const std::string& group) const;
+	void RemoveEntityGroup(Entity entity);
+
 	// Component management
 
 	template<typename TComponent, typename ...TArgs>
@@ -238,6 +260,14 @@ private:
 	// Set of entities that are flagged to be added or removed in the next registry Update()
 	std::set<Entity> _entitiesToBeAdded;
 	std::set<Entity> _entitiesToBeKilled;
+
+	// Entity tags (one tag name per entity)
+	std::unordered_map<std::string, Entity> _entityPerTag;
+	std::unordered_map<int, std::string> _tagPerEntity;
+
+	// Entity groups (a set of entities per group name)
+	std::unordered_map<std::string, std::set<Entity>> _entitiesPerGroup;
+	std::unordered_map<int, std::string> _groupPerEntity;
 
 	// Deque of free ids that were previously removed
 	std::deque<int> _freeIds;

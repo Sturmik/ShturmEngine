@@ -49,7 +49,7 @@ public:
 					projectilePosition.y += spriteComponent.height * transform.scale.y / 2.0;
 				}
 
-	// Add a new projectile entity to the registry
+				// Add a new projectile entity to the registry
 				Entity projectile = entity.AccessRegistry().CreateEntity();
 				projectile.AddComponent<TransformComponent>(projectilePosition, glm::vec2(1.0, 1.0), 0);
 				projectile.AddComponent<RigidBodyComponent>(projectileEmitVector);
