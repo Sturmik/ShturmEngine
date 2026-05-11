@@ -207,11 +207,12 @@ void Game::LoadLevel(int level)
     chopper.AddComponent<TransformComponent>(glm::vec2(50, 50), glm::vec2(2.0, 2.0), 0.0);
     chopper.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
     chopper.AddComponent<SpriteComponent>( "chopper-image", 32, 32, 2);
+    chopper.AddComponent<BoxColliderComponent>(chopper.GetComponent<SpriteComponent>().width, chopper.GetComponent<SpriteComponent>().height);
     chopper.AddComponent<AnimationComponent>(2, 15, true);
     chopper.AddComponent<KeyboardControlledComponent>(glm::vec2(0, -120), glm::vec2(120, 0), glm::vec2(0, 120), glm::vec2(-120, 0));
     chopper.AddComponent<CameraFollowComponent>();
     chopper.AddComponent<HealthComponent>(100);
-    chopper.AddComponent<ProjectileEmitterComponent>(glm::vec2(150.0, 150.0), 0, 5000, 0, true, "bullet-image");
+    chopper.AddComponent<ProjectileEmitterComponent>(glm::vec2(150.0, 150.0), 0, 5000, 10, true, "bullet-image");
 
     Entity tank = _registry.CreateEntity();
     tank.Group("enemies");
@@ -219,15 +220,16 @@ void Game::LoadLevel(int level)
     tank.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
     tank.AddComponent<SpriteComponent>(AssetStore::Get(), "tank-image", 2);
     tank.AddComponent<BoxColliderComponent>(tank.GetComponent<SpriteComponent>().width, tank.GetComponent<SpriteComponent>().height);
-    tank.AddComponent<ProjectileEmitterComponent>(glm::vec2(100.0, 0.0), 3000, 4000, 0, false, "bullet-image");
+    tank.AddComponent<ProjectileEmitterComponent>(glm::vec2(100.0, 0.0), 3000, 4000, 10, false, "bullet-image");
     tank.AddComponent<HealthComponent>(100);
 
     Entity truck = _registry.CreateEntity();
+    truck.Group("enemies");
     truck.AddComponent<TransformComponent>(glm::vec2(10, 10), glm::vec2(1.0, 1.0), 0.0);
     truck.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
     truck.AddComponent<SpriteComponent>(AssetStore::Get(), "truck-image", 1);
     truck.AddComponent<BoxColliderComponent>(truck.GetComponent<SpriteComponent>().width, truck.GetComponent<SpriteComponent>().height);
-    truck.AddComponent<ProjectileEmitterComponent>(glm::vec2(0.0, 100.0), 1000, 5000, 0, false, "bullet-image");
+    truck.AddComponent<ProjectileEmitterComponent>(glm::vec2(0.0, 100.0), 1000, 5000, 10, false, "bullet-image");
     truck.AddComponent<HealthComponent>(100);
 }
 
