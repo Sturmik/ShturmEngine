@@ -35,8 +35,6 @@ public:
         const char* function,
         const char* fmt, ...);
 
-    const std::vector<LogEntry>& GetMessages() const;
-
 private:
     Logger() = default;
     ~Logger();
@@ -52,6 +50,4 @@ private:
     std::ofstream _file;
     std::mutex _mutex;
     LogLevel _currentLevel = LogLevel::Debug;
-
-    std::vector<LogEntry> _messages;
 };

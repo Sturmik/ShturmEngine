@@ -7,7 +7,6 @@
 #include <set>
 #include <memory>
 #include <deque>
-#include <unordered_map>
 
 #include "Logger/LoggerMacro.h"
 
@@ -127,6 +126,8 @@ class IPool
 {
 public:
 	virtual ~IPool() {}
+
+	virtual void Remove(int entityId) = 0;
 };
 
 template<typename T>
@@ -135,7 +136,7 @@ class Pool : public IPool
 public:
 	Pool(int size = 100)
 	{
-		_data.resize(size);
+		_data.reserve(size);
 	}
 
 	virtual ~Pool() = default;
@@ -165,23 +166,63 @@ public:
 		_data.push_back(object);
 	}
 
-	void Set(int index, T object)
+	void Set(int entityId, T object)
 	{
-		_data[index] = object;
+		if (_entityIdToIndex.find(entityId) != _entityIdToIndex.end())
+		{
+			// If the element already exists, simply replace the component object
+			int index = _entityIdToIndex[entityId];
+			_data[index] = object;
+		}
+		else
+		{
+			// When adding a new object, we keep track of the entity ids and their vector index
+			_entityIdToIndex.emplace(entityId, _data.size());
+			_indexToEntityId.emplace(_data.size(), entityId);
+			_data.push_back(object);
+		}
 	}
 
-	T& Get(int index)
+	virtual void Remove(int entityId) override
 	{
+		if (_entityIdToIndex.find(entityId) == _entityIdToIndex.end())
+		{
+			return;
+		}
+
+		// Copy the last element to the deleted position to keep the array packed
+		int indexOfRemoved = _entityIdToIndex[entityId];
+		int indexOfLast = _data.size() - 1;
+		_data[indexOfRemoved] = _data[indexOfLast];
+
+		// Update the index entity maps to point to the correct elements
+		int entityIdOfLastElement = _indexToEntityId[indexOfLast];
+		_entityIdToIndex[entityIdOfLastElement] = indexOfRemoved;
+		_indexToEntityId[indexOfRemoved] = entityIdOfLastElement;
+
+		_entityIdToIndex.erase(entityId);
+		_indexToEntityId.erase(indexOfLast);
+
+		_data.resize(_data.size() - 1);
+	}
+
+	T& Get(int entityId)
+	{
+		int index = _entityIdToIndex[entityId];
 		return static_cast<T&>(_data[index]);
 	}
 
-	T& operator[] (unsigned int index)
+	T& operator[] (unsigned int entityId)
 	{
-		return _data[index];
+		return Get(entityId);
 	}
 
 private:
 	std::vector<T> _data;
+
+	// Helper maps to keep track of entity ids per index, so the vector is always packed
+	std::unordered_map<int, int> _entityIdToIndex;
+	std::unordered_map<int, int> _indexToEntityId;
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -259,6 +300,7 @@ private:
 
 	// Set of entities that are flagged to be added or removed in the next registry Update()
 	std::set<Entity> _entitiesToBeAdded;
+	std::set<Entity> _entitiesToBeModified;
 	std::set<Entity> _entitiesToBeKilled;
 
 	// Entity tags (one tag name per entity)
@@ -295,12 +337,6 @@ void Registry::AddComponent(Entity entity, TArgs&& ...args)
 	// Get the pool of component values for that component type
 	std::shared_ptr<Pool<TComponent>> componentPool = std::static_pointer_cast<Pool<TComponent>>(_componentPools[componentId]);
 
-	// If the entity id is greater than the current size of the component pool, then resize the pool
-	if (entityId >= componentPool->GetSize())
-	{
-		componentPool->Resize(_numEntities);
-	}
-
 	// Create a new Component object of the type T, and forward the various parameters to the constructor
 	TComponent newComponent(std::forward<TArgs>(args)...);
 
@@ -319,7 +355,14 @@ void Registry::RemoveComponent(Entity entity)
 	const int componentId = Component<TComponent>::GetId();
 	const int entityId = entity.GetId();
 
+	// Set this component signature for that entity to false
 	_entityComponentSignatures[entityId].set(componentId, false);
+
+	// Get the pool of component values for that component type
+	std::shared_ptr<Pool<TComponent>> componentPool = std::static_pointer_cast<Pool<TComponent>>(_componentPools[componentId]);
+	componentPool->Remove(entityId);
+
+	_entitiesToBeModified.insert(entity);
 
 	LOG_INFO("Component id = %d was removed from entity id %d", componentId, entityId);
 }

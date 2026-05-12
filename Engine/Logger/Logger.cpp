@@ -64,7 +64,6 @@ void Logger::Log(LogLevel level,
 
     // Save log entry
     LogEntry logEntry = { level, finalMessage };
-    _messages.emplace_back(logEntry);
 
     std::string coloredFinalMessage = finalMessage;
 
@@ -92,11 +91,6 @@ void Logger::Log(LogLevel level,
     {
        _file << finalMessage << std::endl;
     }
-}
-
-const std::vector<LogEntry>& Logger::GetMessages() const
-{
-    return _messages;
 }
 
 Logger::~Logger()

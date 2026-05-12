@@ -91,11 +91,31 @@ void Registry::Update()
     }
     _entitiesToBeAdded.clear();
 
+    // Processing the entities that are modified
+    for (Entity entity : _entitiesToBeModified)
+    {
+        // Remove entity from all systems
+        RemoveEntityFromSystems(entity);
+
+        // Add entity to according systems
+        AddEntityToSystems(entity);
+    }
+    _entitiesToBeModified.clear();
+
     // Processing the entities that are waiting to be killed from the active Systems
     for (Entity entity : _entitiesToBeKilled)
     {
-        // Remove entities from all systems
+        // Remove entity from all systems
         RemoveEntityFromSystems(entity);
+
+        // Remove the entity from the component pools
+        for (std::shared_ptr<IPool> pool : _componentPools)
+        {
+            if (pool)
+            {
+                pool->Remove(entity.GetId());
+            }
+        }
 
         // Reset entity component signature, which is basically removing all components from it
         _entityComponentSignatures[entity.GetId()].reset();
