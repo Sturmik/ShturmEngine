@@ -20,8 +20,7 @@
 #include "Systems/ProjectileEmitSystem.h"
 #include "Systems/LifecycleSystem.h"
 #include "Systems/RenderTextSystem.h"
-
-#include "Components/HealthComponent.h"
+#include "Systems/RenderHealthBarSystem.h"
 
 Game::Game() : _isRunning(false), _isDebug(false), _window(nullptr), _renderer(nullptr), _camera(), _mapWidth(0), _mapHeight(0)
 {
@@ -105,6 +104,7 @@ void Game::LoadLevel(int level)
     _registry.AddSystem<ProjectileEmitSystem>();
     _registry.AddSystem<LifecycleSystem>();
     _registry.AddSystem<RenderTextSystem>();
+    _registry.AddSystem<RenderHealthBarSystem>();
 
     // Perform the subscription of the events for all systems
     _registry.GetSystem<DamageSystem>().SubscribeToEvents(_eventBus);
@@ -120,6 +120,9 @@ void Game::LoadLevel(int level)
     AssetStore::Get().AddTexture(_renderer, "bullet-image", "./Assets/Images/bullet.png");
     // Fonts
     AssetStore::Get().AddFont("charriot-font", "./Assets/Fonts/charriot.ttf", 16);
+    AssetStore::Get().AddFont("arial-font", "./Assets/Fonts/arial.ttf", 16);
+    AssetStore::Get().AddFont("pico-font-10", "./Assets/Fonts/pico8.ttf", 10);
+    AssetStore::Get().AddFont("pico-font-12", "./Assets/Fonts/pico8.ttf", 12);
 
     // Load tile atlas texture (tileset image)
     AssetStore::Get().AddTexture(_renderer, "jungle-tilemap-image", "./Assets/Tilemaps/jungle.png");
@@ -225,6 +228,7 @@ void Game::LoadLevel(int level)
     chopper.AddComponent<CameraFollowComponent>();
     chopper.AddComponent<HealthComponent>(100);
     chopper.AddComponent<ProjectileEmitterComponent>(glm::vec2(150.0, 150.0), 0, 5000, 10, true, "bullet-image");
+    chopper.AddComponent<HealthBarComponent>("pico-font-10", glm::vec2(70, 0), glm::vec2(30, 10), glm::vec2(70, 20));
 
     Entity tank = _registry.CreateEntity();
     tank.Group("enemies");
@@ -234,6 +238,7 @@ void Game::LoadLevel(int level)
     tank.AddComponent<BoxColliderComponent>(tank.GetComponent<SpriteComponent>().width, tank.GetComponent<SpriteComponent>().height);
     tank.AddComponent<ProjectileEmitterComponent>(glm::vec2(100.0, 0.0), 3000, 4000, 10, false, "bullet-image");
     tank.AddComponent<HealthComponent>(100);
+    tank.AddComponent<HealthBarComponent>("pico-font-10", glm::vec2(70, 0), glm::vec2(30, 10), glm::vec2(70, 20));
 
     Entity truck = _registry.CreateEntity();
     truck.Group("enemies");
@@ -243,6 +248,7 @@ void Game::LoadLevel(int level)
     truck.AddComponent<BoxColliderComponent>(truck.GetComponent<SpriteComponent>().width, truck.GetComponent<SpriteComponent>().height);
     truck.AddComponent<ProjectileEmitterComponent>(glm::vec2(0.0, 100.0), 1000, 5000, 10, false, "bullet-image");
     truck.AddComponent<HealthComponent>(100);
+    truck.AddComponent<HealthBarComponent>("pico-font-10", glm::vec2(70, 0), glm::vec2(30, 10), glm::vec2(70, 20));
 
     Entity label = _registry.CreateEntity();
     label.AddComponent<TransformComponent>(glm::vec2(400, 650), glm::vec2(1.0, 1.0), 0.0);
@@ -347,6 +353,7 @@ void Game::Render()
 
     _registry.GetSystem<RenderSpriteSystem>().Update(*_renderer, AssetStore::Get(), _camera);
     _registry.GetSystem<RenderTextSystem>().Update(*_renderer, AssetStore::Get(), _camera);
+    _registry.GetSystem<RenderHealthBarSystem>().Update(*_renderer, AssetStore::Get(), _camera);
 
     if (_isDebug)
     {
