@@ -29,8 +29,8 @@ public:
 
 			// Set the destination rectangle with the x, y position to be rendered
 			SDL_FRect rect = {
-				transform.position.x + boxCollider.offset.x - camera.x,
-				transform.position.y + boxCollider.offset.y - camera.y,
+				transform.position.x + boxCollider.offset.x - (transform.isFixed ? 0 : camera.x),
+				transform.position.y + boxCollider.offset.y - (transform.isFixed ? 0 : camera.y),
 				(boxCollider.offset.x + boxCollider.width) * transform.scale.x,
 				(boxCollider.offset.y + boxCollider.height) * transform.scale.y
 			};

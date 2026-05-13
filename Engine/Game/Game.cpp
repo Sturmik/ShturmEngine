@@ -210,8 +210,8 @@ void Game::LoadLevel(int level)
     int windowWidth = 0;
     int windowHeight = 0;
     SDL_GetWindowSizeInPixels(_window, &windowWidth, &windowHeight);
-    radar.AddComponent<TransformComponent>(glm::vec2(windowWidth - 74, 10), glm::vec2(1.0, 1.0), 0.0);
-    radar.AddComponent<SpriteComponent>("radar-image", 64, 64, 2, true);
+    radar.AddComponent<TransformComponent>(glm::vec2(windowWidth - 74, 10), glm::vec2(1.0, 1.0), 0.0, true);
+    radar.AddComponent<SpriteComponent>("radar-image", 64, 64, 2);
     radar.AddComponent<AnimationComponent>(8, 5, true);
 
     Entity chopper = _registry.CreateEntity();
@@ -247,7 +247,7 @@ void Game::LoadLevel(int level)
     Entity label = _registry.CreateEntity();
     label.AddComponent<TransformComponent>(glm::vec2(400, 650), glm::vec2(1.0, 1.0), 0.0);
     SDL_Color color = { 255, 0, 0};
-    label.AddComponent<TextLabelComponent>( "THIS IS MY TRASH-CODE!!!!", "charriot-font", color, true);
+    label.AddComponent<TextLabelComponent>( "THIS IS MY TRASH-CODE!!!!", "charriot-font", color);
 }
 
 void Game::Setup()

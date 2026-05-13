@@ -39,8 +39,8 @@ public:
 
 			// Set the destination rectangle with the x, y position to be rendered
 			SDL_FRect dstRect = {
-				transform.position.x - (sprite.isFixed ? 0 : camera.x),
-				transform.position.y - (sprite.isFixed ? 0 : camera.y),
+				transform.position.x - (transform.isFixed ? 0 : camera.x),
+				transform.position.y - (transform.isFixed ? 0 : camera.y),
 				sprite.width * transform.scale.x,
 				sprite.height * transform.scale.y
 			};
