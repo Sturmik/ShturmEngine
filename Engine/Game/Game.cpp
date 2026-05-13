@@ -1,5 +1,6 @@
 #include "Game.h"
 
+#include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3_image/SDL_image.h>
 #include <iostream>
 #include <string>
@@ -9,7 +10,7 @@
 #include "Logger/LoggerMacro.h"
 
 #include "Systems/MovementSystem.h"
-#include "Systems/RenderSystem.h"
+#include "Systems/RenderSpriteSystem.h"
 #include "Systems/AnimationSystem.h"
 #include "Systems/CollisionSystem.h"
 #include "Systems/RenderColliderSystem.h"
@@ -18,6 +19,7 @@
 #include "Systems/CameraMovementSystem.h"
 #include "Systems/ProjectileEmitSystem.h"
 #include "Systems/LifecycleSystem.h"
+#include "Systems/RenderTextSystem.h"
 
 #include "Components/HealthComponent.h"
 
@@ -36,6 +38,12 @@ void Game::Initialize()
     if (!SDL_Init((SDL_INIT_VIDEO)))
     {
         LOG_ERROR("Error initializing SDL: %s", SDL_GetError());
+        return;
+    }
+
+    if (!TTF_Init())
+    {
+        LOG_ERROR("Error initializing TTF: %s", SDL_GetError());
         return;
     }
 
@@ -87,7 +95,7 @@ void Game::LoadLevel(int level)
 
     // Add the systems that need to be processed in our game
     _registry.AddSystem<MovementSystem>();
-    _registry.AddSystem<RenderSystem>();
+    _registry.AddSystem<RenderSpriteSystem>();
     _registry.AddSystem<AnimationSystem>();
     _registry.AddSystem<CollisionSystem>();
     _registry.AddSystem<RenderColliderSystem>();
@@ -96,18 +104,22 @@ void Game::LoadLevel(int level)
     _registry.AddSystem<CameraMovementSystem>();
     _registry.AddSystem<ProjectileEmitSystem>();
     _registry.AddSystem<LifecycleSystem>();
+    _registry.AddSystem<RenderTextSystem>();
 
     // Perform the subscription of the events for all systems
     _registry.GetSystem<DamageSystem>().SubscribeToEvents(_eventBus);
     _registry.GetSystem<KeyboardControlSystem>().SubscribeToEvents(_eventBus);
     _registry.GetSystem<ProjectileEmitSystem>().SubscribeToEvents(_eventBus);
 
-    // Add assets to the asset store
+    // Add assets to the asset store:
+    // Textures
     AssetStore::Get().AddTexture(_renderer, "tank-image", "./Assets/Images/tank-panther-right.png");
     AssetStore::Get().AddTexture(_renderer, "truck-image", "./Assets/Images/truck-ford-right.png");
     AssetStore::Get().AddTexture(_renderer, "chopper-image", "./Assets/Images/chopper-spritesheet.png");
     AssetStore::Get().AddTexture(_renderer, "radar-image", "./Assets/Images/radar.png");
     AssetStore::Get().AddTexture(_renderer, "bullet-image", "./Assets/Images/bullet.png");
+    // Fonts
+    AssetStore::Get().AddFont("charriot-font", "./Assets/Fonts/charriot.ttf", 16);
 
     // Load tile atlas texture (tileset image)
     AssetStore::Get().AddTexture(_renderer, "jungle-tilemap-image", "./Assets/Tilemaps/jungle.png");
@@ -130,7 +142,7 @@ void Game::LoadLevel(int level)
         const int TILE_WIDTH = static_cast<int>(atlasWidth / TILE_COLUMNS);
         const int TILE_HEIGHT = static_cast<int>(atlasHeight / TILE_ROWS);
 
-        const float TILE_SCALE = 2.0f;
+        const float TILE_SCALE = 3.0f;
 
         std::string line;
         int row = 0;
@@ -204,7 +216,7 @@ void Game::LoadLevel(int level)
 
     Entity chopper = _registry.CreateEntity();
     chopper.Tag("player");
-    chopper.AddComponent<TransformComponent>(glm::vec2(50, 50), glm::vec2(2.0, 2.0), 0.0);
+    chopper.AddComponent<TransformComponent>(glm::vec2(150, 150), glm::vec2(2.0, 2.0), 0.0);
     chopper.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
     chopper.AddComponent<SpriteComponent>( "chopper-image", 32, 32, 2);
     chopper.AddComponent<BoxColliderComponent>(chopper.GetComponent<SpriteComponent>().width, chopper.GetComponent<SpriteComponent>().height);
@@ -216,7 +228,7 @@ void Game::LoadLevel(int level)
 
     Entity tank = _registry.CreateEntity();
     tank.Group("enemies");
-    tank.AddComponent<TransformComponent>(glm::vec2(300, 10), glm::vec2(1.0, 1.0), 0.0);
+    tank.AddComponent<TransformComponent>(glm::vec2(700, 600), glm::vec2(2.0, 2.0), 0.0);
     tank.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
     tank.AddComponent<SpriteComponent>(AssetStore::Get(), "tank-image", 2);
     tank.AddComponent<BoxColliderComponent>(tank.GetComponent<SpriteComponent>().width, tank.GetComponent<SpriteComponent>().height);
@@ -225,12 +237,17 @@ void Game::LoadLevel(int level)
 
     Entity truck = _registry.CreateEntity();
     truck.Group("enemies");
-    truck.AddComponent<TransformComponent>(glm::vec2(10, 10), glm::vec2(1.0, 1.0), 0.0);
+    truck.AddComponent<TransformComponent>(glm::vec2(300, 750), glm::vec2(2.0, 2.0), 0.0);
     truck.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
     truck.AddComponent<SpriteComponent>(AssetStore::Get(), "truck-image", 1);
     truck.AddComponent<BoxColliderComponent>(truck.GetComponent<SpriteComponent>().width, truck.GetComponent<SpriteComponent>().height);
     truck.AddComponent<ProjectileEmitterComponent>(glm::vec2(0.0, 100.0), 1000, 5000, 10, false, "bullet-image");
     truck.AddComponent<HealthComponent>(100);
+
+    Entity label = _registry.CreateEntity();
+    label.AddComponent<TransformComponent>(glm::vec2(400, 650), glm::vec2(1.0, 1.0), 0.0);
+    SDL_Color color = { 255, 0, 0};
+    label.AddComponent<TextLabelComponent>( "THIS IS MY TRASH-CODE!!!!", "charriot-font", color, true);
 }
 
 void Game::Setup()
@@ -328,7 +345,8 @@ void Game::Render()
     SDL_SetRenderDrawColor(_renderer, 21, 21, 21, 255);
     SDL_RenderClear(_renderer);
 
-    _registry.GetSystem<RenderSystem>().Update(*_renderer, AssetStore::Get(), _camera);
+    _registry.GetSystem<RenderSpriteSystem>().Update(*_renderer, AssetStore::Get(), _camera);
+    _registry.GetSystem<RenderTextSystem>().Update(*_renderer, AssetStore::Get(), _camera);
 
     if (_isDebug)
     {

@@ -8,10 +8,10 @@
 #include <SDL3/SDL.h>
 #include <algorithm>
 
-class RenderSystem : public System
+class RenderSpriteSystem : public System
 {
 public:
-	RenderSystem()
+	RenderSpriteSystem()
 	{
 		RequireComponent<TransformComponent>();
 		RequireComponent<SpriteComponent>();
@@ -31,7 +31,6 @@ public:
 		// Loop all entities that the system is interested in
 		for (Entity& entity : AccessSystemEntities())
 		{
-			// Update entity position based on its velocity every frame of the game loop
 			const TransformComponent& transform = entity.GetComponent<TransformComponent>();
 			const SpriteComponent& sprite = entity.GetComponent<SpriteComponent>();
 
