@@ -22,6 +22,10 @@
 #include "Systems/RenderTextSystem.h"
 #include "Systems/RenderHealthBarSystem.h"
 
+#include <imgui.h>
+#include <backends/imgui_impl_sdl3.h>
+#include <backends/imgui_impl_sdlrenderer3.h>
+
 Game::Game() : _isRunning(false), _isDebug(false), _window(nullptr), _renderer(nullptr), _camera(), _mapWidth(0), _mapHeight(0)
 {
 	LOG_INFO("Game constructor called!");
@@ -85,6 +89,20 @@ void Game::Initialize()
     glm::vec2 windowSize = GetWindowSize();
     _camera.w = windowSize.x;
     _camera.h = windowSize.y;
+
+    // Setup Dear ImGui
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    // Optional settings
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+    // Setup style
+    ImGui::StyleColorsDark();
+
+    // Initialize platform/renderer backends
+    ImGui_ImplSDL3_InitForSDLRenderer(_window, _renderer);
+    ImGui_ImplSDLRenderer3_Init(_renderer);
 }
 
 void Game::LoadLevel(int level)
@@ -263,6 +281,8 @@ void Game::Setup()
 
 void Game::ProcessInput(SDL_Event& event)
 {
+    ImGui_ImplSDL3_ProcessEvent(&event);
+
     switch (event.type)
     {
         case SDL_EVENT_WINDOW_RESIZED:
@@ -358,6 +378,17 @@ void Game::Render()
     if (_isDebug)
     {
         _registry.GetSystem<RenderColliderSystem>().Update(*_renderer, _camera);
+
+        // Start ImGui frame
+        ImGui_ImplSDLRenderer3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::ShowDemoWindow();
+
+        // Render ImGui
+        ImGui::Render();
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), _renderer);
     }
 
     SDL_RenderPresent(_renderer);
