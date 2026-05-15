@@ -396,6 +396,10 @@ void Game::Render()
 
 void Game::Destroy()
 {
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
+
     if (_renderer)
     {
         SDL_DestroyRenderer(_renderer);
