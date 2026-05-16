@@ -22,7 +22,7 @@ public:
 		// No components required. Renders ImGui widgets
 	}
 
-	void Update(SDL_Renderer& renderer, Registry& registry)
+	void Update(SDL_Renderer& renderer, Registry& registry, SDL_FRect& camera)
 	{
 		// Start ImGui frame
 		ImGui_ImplSDLRenderer3_NewFrame();
@@ -271,6 +271,20 @@ public:
 				enemy.AddComponent<HealthComponent>(healthPercentage);
 				enemy.AddComponent<HealthBarComponent>("pico-font-10", glm::vec2(healthBarTextOffsetX, healthBarTextOffsetY), glm::vec2(healthBarSizeX, healthBarSizeY), glm::vec2(healthBarOffsetX, healthBarOffsetY));
 			}
+		}
+		ImGui::End();
+
+		// Display a small overlay window to display the map position using the mouse
+		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiChildFlags_AlwaysAutoResize;
+		ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always, ImVec2(0, 0));
+		ImGui::SetNextWindowBgAlpha(0.9f);
+		if (ImGui::Begin("Map Coordinates", NULL, windowFlags))
+		{
+			ImGui::Text(
+				"Map Coordinates (x=%.1f, y=%.1f)",
+				ImGui::GetIO().MousePos.x + camera.x,
+				ImGui::GetIO().MousePos.y + camera.y
+			);
 		}
 		ImGui::End();
 
