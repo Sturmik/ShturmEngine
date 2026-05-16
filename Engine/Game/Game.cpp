@@ -200,7 +200,6 @@ void Game::LoadLevel(int level)
                     TILE_WIDTH,
                     TILE_HEIGHT,
                     0,
-                    false,
                     srcCol * TILE_WIDTH,
                     srcRow * TILE_HEIGHT
                 );

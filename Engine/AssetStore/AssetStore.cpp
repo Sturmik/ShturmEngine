@@ -27,6 +27,7 @@ void AssetStore::ClearAssets()
 		SDL_DestroyTexture(texture.second);
 	}
 	_textures.clear();
+	_texturesIds.clear();
 
 	for (std::pair<const std::string, TTF_Font*> font : _fonts)
 	{
@@ -52,6 +53,7 @@ void AssetStore::AddTexture(SDL_Renderer* renderer, const std::string& assetId, 
 
 	// Add the texture to the map
 	_textures.emplace(assetId, texture);
+	_texturesIds.push_back(assetId);
 
 	LOG_INFO("New texture added to the Asset Store with id = %s", assetId.c_str());
 }
@@ -59,6 +61,11 @@ void AssetStore::AddTexture(SDL_Renderer* renderer, const std::string& assetId, 
 SDL_Texture* AssetStore::GetTexture(const std::string& assetId) const
 {
 	return _textures.at(assetId);
+}
+
+const std::vector<std::string>& AssetStore::GetTextureIds() const
+{
+	return _texturesIds;
 }
 
 void AssetStore::AddFont(const std::string& assetId, const std::string filePath, int fontSize)
