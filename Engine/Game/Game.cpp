@@ -21,10 +21,7 @@
 #include "Systems/LifecycleSystem.h"
 #include "Systems/RenderTextSystem.h"
 #include "Systems/RenderHealthBarSystem.h"
-
-#include <imgui.h>
-#include <backends/imgui_impl_sdl3.h>
-#include <backends/imgui_impl_sdlrenderer3.h>
+#include "Systems/RenderImGuiSystem.h"
 
 Game::Game() : _isRunning(false), _isDebug(false), _window(nullptr), _renderer(nullptr), _camera(), _mapWidth(0), _mapHeight(0)
 {
@@ -123,6 +120,7 @@ void Game::LoadLevel(int level)
     _registry.AddSystem<LifecycleSystem>();
     _registry.AddSystem<RenderTextSystem>();
     _registry.AddSystem<RenderHealthBarSystem>();
+    _registry.AddSystem<RenderImGuiSystem>();
 
     // Perform the subscription of the events for all systems
     _registry.GetSystem<DamageSystem>().SubscribeToEvents(_eventBus);
@@ -264,7 +262,7 @@ void Game::LoadLevel(int level)
     truck.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
     truck.AddComponent<SpriteComponent>(AssetStore::Get(), "truck-image", 1);
     truck.AddComponent<BoxColliderComponent>(truck.GetComponent<SpriteComponent>().width, truck.GetComponent<SpriteComponent>().height);
-    truck.AddComponent<ProjectileEmitterComponent>(glm::vec2(0.0, 100.0), 1000, 5000, 10, false, "bullet-image");
+    truck.AddComponent<ProjectileEmitterComponent>(glm::vec2(0.0, -100.0), 1000, 5000, 10, false, "bullet-image");
     truck.AddComponent<HealthComponent>(100);
     truck.AddComponent<HealthBarComponent>("pico-font-10", glm::vec2(70, 0), glm::vec2(30, 10), glm::vec2(70, 20));
 
@@ -378,17 +376,7 @@ void Game::Render()
     if (_isDebug)
     {
         _registry.GetSystem<RenderColliderSystem>().Update(*_renderer, _camera);
-
-        // Start ImGui frame
-        ImGui_ImplSDLRenderer3_NewFrame();
-        ImGui_ImplSDL3_NewFrame();
-        ImGui::NewFrame();
-
-        ImGui::ShowDemoWindow();
-
-        // Render ImGui
-        ImGui::Render();
-        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), _renderer);
+        _registry.GetSystem<RenderImGuiSystem>().Update(*_renderer);
     }
 
     SDL_RenderPresent(_renderer);
