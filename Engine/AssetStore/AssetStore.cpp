@@ -34,6 +34,12 @@ void AssetStore::ClearAssets()
 		TTF_CloseFont(font.second);
 	}
 	_fonts.clear();
+
+	for (std::pair<const std::string, SoundData>& sound : _sounds)
+	{
+		SDL_free(sound.second.buffer);
+	}
+	_sounds.clear();
 }
 
 void AssetStore::AddTexture(SDL_Renderer* renderer, const std::string& assetId, const std::string& filePath)
@@ -55,12 +61,13 @@ void AssetStore::AddTexture(SDL_Renderer* renderer, const std::string& assetId, 
 	_textures.emplace(assetId, texture);
 	_texturesIds.push_back(assetId);
 
-	LOG_INFO("New texture added to the Asset Store with id = %s", assetId.c_str());
+	LOG_INFO("Texture loaded: %s", assetId.c_str());
 }
 
 SDL_Texture* AssetStore::GetTexture(const std::string& assetId) const
 {
-	return _textures.at(assetId);
+	auto it = _textures.find(assetId);
+	return (it != _textures.end()) ? it->second : nullptr;
 }
 
 const std::vector<std::string>& AssetStore::GetTextureIds() const
@@ -70,10 +77,38 @@ const std::vector<std::string>& AssetStore::GetTextureIds() const
 
 void AssetStore::AddFont(const std::string& assetId, const std::string filePath, int fontSize)
 {
-	_fonts.emplace(assetId, TTF_OpenFont(filePath.c_str(), fontSize));
+	TTF_Font* font = TTF_OpenFont(filePath.c_str(), fontSize);
+	if (font == nullptr)
+	{
+		LOG_ERROR("Failed to load font %s : %s", filePath.c_str(), SDL_GetError());
+		return;
+	}
+
+	_fonts.emplace(assetId, font);
+	LOG_INFO("Font loaded: %s", assetId.c_str());
 }
 
 TTF_Font* AssetStore::GetFont(const std::string assetId)
 {
-	return _fonts.at(assetId);
+	auto it = _fonts.find(assetId);
+	return (it != _fonts.end()) ? it->second : nullptr;
+}
+
+void AssetStore::AddSound(const std::string& assetId, const std::string& filePath)
+{
+	SoundData sound;
+	if (!SDL_LoadWAV(filePath.c_str(), &sound.spec, &sound.buffer, &sound.length))
+	{
+		LOG_ERROR("Failed to load sound %s : %s", filePath.c_str(), SDL_GetError());
+		return;
+	}
+
+	_sounds.emplace(assetId, sound);
+	LOG_INFO("Sound loaded: %s", assetId.c_str());
+}
+
+SoundData* AssetStore::GetSound(const std::string assetId)
+{
+	auto it = _sounds.find(assetId);
+	return (it != _sounds.end()) ? &it->second : nullptr;
 }

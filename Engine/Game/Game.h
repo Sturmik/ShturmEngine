@@ -43,4 +43,6 @@ private:
 
 	Registry _registry;
 	EventBus _eventBus;
+
+	SDL_AudioDeviceID _audioDevice;
 };

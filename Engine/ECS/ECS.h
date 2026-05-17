@@ -8,7 +8,7 @@
 #include <memory>
 #include <deque>
 
-#include "Logger/LoggerMacro.h"
+#include "EventBus/EventBus.h"
 
 const unsigned int MAX_COMPONENTS = 32;
 /////////////////////////////////////////////////////////////////////
@@ -283,6 +283,14 @@ public:
 	void AddEntityToSystems(Entity entity);
 	void RemoveEntityFromSystems(Entity entity);
 
+	// Sets event bus for handling callbacks
+	void SetEventBus(EventBus* eventBusPtr) 
+	{ 
+		_eventBusPtr = eventBusPtr; 
+	}
+
+	void ClearAll();
+
 private:
 	int _numEntities;
 
@@ -313,6 +321,9 @@ private:
 
 	// Deque of free ids that were previously removed
 	std::deque<int> _freeIds;
+
+	// Reference to event bus
+	EventBus* _eventBusPtr;
 };
 
 template<typename TComponent, typename ...TArgs>

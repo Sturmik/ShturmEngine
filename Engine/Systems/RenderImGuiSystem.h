@@ -203,11 +203,11 @@ public:
 			static float healthBarTextOffsetX = 70.0f;
 			static float healthBarTextOffsetY = 0.0f;
 
-			static float healthBarSizeX = 70.0f;
-			static float healthBarSizeY = 20.0f;
+			static float healthBarSizeX = 30.0f;
+			static float healthBarSizeY = 10.0f;
 
-			static float healthBarOffsetX = 30.0f;
-			static float healthBarOffsetY = 10.0f;
+			static float healthBarOffsetX = 70.0f;
+			static float healthBarOffsetY = 20.0f;
 
 			if (ImGui::CollapsingHeader("Health and Health Bar Components", ImGuiTreeNodeFlags_DefaultOpen))
 			{

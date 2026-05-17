@@ -1,5 +1,7 @@
 #include "ECS.h"
 
+#include "Events/KilLEntityEvent.h"
+
 int IComponent::nextId = 0;
 
 Entity::Entity(int id, Registry* registry) : _id(id), _registry(registry)
@@ -160,6 +162,11 @@ Entity Registry::CreateEntity()
 void Registry::KillEntity(Entity entity)
 {
     _entitiesToBeKilled.insert(entity);
+
+    if (_eventBusPtr)
+    {
+        _eventBusPtr->EmitEvent<KillEntityEvent>(entity.GetId());
+    }
 }
 
 void Registry::TagEntity(Entity entity, const std::string& tag)
@@ -279,3 +286,17 @@ void Registry::RemoveEntityFromSystems(Entity entity)
         systemPair.second->RemoveEntityFromSystem(entity);
     }
 }
+
+void Registry::ClearAll()
+{
+    _componentPools.clear();
+    _systems.clear();
+    _entitiesToBeAdded.clear();
+    _entitiesToBeModified.clear();
+    _entitiesToBeKilled.clear();
+    _entityPerTag.clear();
+    _tagPerEntity.clear();
+    _entitiesPerGroup.clear();
+    _groupPerEntity.clear();
+    _freeIds.clear();
+};

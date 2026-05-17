@@ -22,9 +22,11 @@
 #include "Systems/RenderTextSystem.h"
 #include "Systems/RenderHealthBarSystem.h"
 #include "Systems/RenderImGuiSystem.h"
+#include "Systems/SoundSystem.h"
 
-Game::Game() : _isRunning(false), _isDebug(false), _window(nullptr), _renderer(nullptr), _camera(), _mapWidth(0), _mapHeight(0)
+Game::Game() : _isRunning(false), _isDebug(false), _window(nullptr), _renderer(nullptr), _camera(), _mapWidth(0), _mapHeight(0), _audioDevice(0)
 {
+    _registry.SetEventBus(&_eventBus);
 	LOG_INFO("Game constructor called!");
 }
 
@@ -35,7 +37,7 @@ Game::~Game()
 
 void Game::Initialize()
 {
-    if (!SDL_Init((SDL_INIT_VIDEO)))
+    if (!SDL_Init((SDL_INIT_VIDEO | SDL_INIT_AUDIO)))
     {
         LOG_ERROR("Error initializing SDL: %s", SDL_GetError());
         return;
@@ -100,6 +102,23 @@ void Game::Initialize()
     // Initialize platform/renderer backends
     ImGui_ImplSDL3_InitForSDLRenderer(_window, _renderer);
     ImGui_ImplSDLRenderer3_Init(_renderer);
+
+    // Audio setup
+    SDL_AudioSpec desired{};
+    desired.freq = 44100;
+    desired.format = SDL_AUDIO_S16;
+    desired.channels = 2;
+
+    _audioDevice = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &desired);
+    if (_audioDevice)
+    {
+        SDL_ResumeAudioDevice(_audioDevice);
+        LOG_INFO("Audio device opened successfully");
+    }
+    else
+    {
+        LOG_ERROR("Failed to open audio device: %s", SDL_GetError());
+    }
 }
 
 void Game::LoadLevel(int level)
@@ -121,11 +140,16 @@ void Game::LoadLevel(int level)
     _registry.AddSystem<RenderTextSystem>();
     _registry.AddSystem<RenderHealthBarSystem>();
     _registry.AddSystem<RenderImGuiSystem>();
+    
+    // Audio system is a complex one and requires additional initialization
+    _registry.AddSystem<SoundSystem>();
+    _registry.GetSystem<SoundSystem>().Initialize(_audioDevice);
 
     // Perform the subscription of the events for all systems
     _registry.GetSystem<DamageSystem>().SubscribeToEvents(_eventBus);
     _registry.GetSystem<KeyboardControlSystem>().SubscribeToEvents(_eventBus);
     _registry.GetSystem<ProjectileEmitSystem>().SubscribeToEvents(_eventBus);
+    _registry.GetSystem<SoundSystem>().SubscribeToEvents(_eventBus);
 
     // Add assets to the asset store:
     // Textures
@@ -139,6 +163,9 @@ void Game::LoadLevel(int level)
     AssetStore::Get().AddFont("arial-font", "./Assets/Fonts/arial.ttf", 16);
     AssetStore::Get().AddFont("pico-font-10", "./Assets/Fonts/pico8.ttf", 10);
     AssetStore::Get().AddFont("pico-font-12", "./Assets/Fonts/pico8.ttf", 12);
+    // Music
+    AssetStore::Get().AddSound("helicopter-sound", "./Assets/Sounds/helicopter.wav");
+    AssetStore::Get().AddSound("SFU-music", "./Assets/Sounds/SFU_@bigsmuggs.wav");
 
     // Load tile atlas texture (tileset image)
     AssetStore::Get().AddTexture(_renderer, "jungle-tilemap-image", "./Assets/Tilemaps/jungle.png");
@@ -244,6 +271,7 @@ void Game::LoadLevel(int level)
     chopper.AddComponent<HealthComponent>(100);
     chopper.AddComponent<ProjectileEmitterComponent>(glm::vec2(150.0, 150.0), 0, 5000, 10, true, "bullet-image");
     chopper.AddComponent<HealthBarComponent>("pico-font-10", glm::vec2(70, 0), glm::vec2(30, 10), glm::vec2(70, 20));
+    chopper.AddComponent<SoundComponent>("helicopter-sound", true, 0.1f);
 
     Entity tank = _registry.CreateEntity();
     tank.Group("enemies");
@@ -269,6 +297,9 @@ void Game::LoadLevel(int level)
     label.AddComponent<TransformComponent>(glm::vec2(400, 650), glm::vec2(1.0, 1.0), 0.0);
     SDL_Color color = { 255, 0, 0};
     label.AddComponent<TextLabelComponent>( "THIS IS MY TRASH-CODE!!!!", "charriot-font", color);
+
+    Entity levelSoundtrack = _registry.CreateEntity();
+    levelSoundtrack.AddComponent<SoundComponent>("SFU-music", true, 0.4f);
 }
 
 void Game::Setup()
@@ -361,6 +392,7 @@ void Game::Update()
     _registry.GetSystem<CameraMovementSystem>().Update(_camera, GetMapSize());
     _registry.GetSystem<ProjectileEmitSystem>().Update( _registry);
     _registry.GetSystem<LifecycleSystem>().Update();
+    _registry.GetSystem<SoundSystem>().Update();
 }
 
 void Game::Render()
@@ -383,6 +415,8 @@ void Game::Render()
 
 void Game::Destroy()
 {
+    _registry.ClearAll();
+
     ImGui_ImplSDLRenderer3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();

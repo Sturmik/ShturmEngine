@@ -50,7 +50,7 @@ public:
 			SDL_SetRenderDrawColor(&renderer, healthBarColor.r, healthBarColor.g, healthBarColor.b, 255);
 
 			// Set the destination rectangle with the x, y position to be rendered
-			SDL_FRect rect = {
+			SDL_FRect healthBarRect = {
 				transform.position.x + healthBar.healthBarOffset.x - (transform.isFixed ? 0 : camera.x),
 				transform.position.y + healthBar.healthBarOffset.y - (transform.isFixed ? 0 : camera.y),
 				healthBar.healthBarSize.x * healthPercentage,
@@ -58,7 +58,7 @@ public:
 			};
 
 			// Draw filled rectangle
-			SDL_RenderFillRect(&renderer, &rect);
+			SDL_RenderFillRect(&renderer, &healthBarRect);
 
 			///////////////////////////// Render health bar text values
 
@@ -77,7 +77,7 @@ public:
 			SDL_GetTextureSize(texture, &labelWidth, &labelHeight);
 
 			// Set the destination rectangle with the x, y position to be rendered
-			SDL_FRect dstRect = {
+			SDL_FRect textRect = {
 				transform.position.x + healthBar.textOffset.x - (transform.isFixed ? 0 : camera.x),
 				transform.position.y + healthBar.textOffset.y - (transform.isFixed ? 0 : camera.y),
 				labelWidth,
@@ -88,7 +88,7 @@ public:
 			SDL_RenderTextureRotated(&renderer,
 				texture,
 				NULL,
-				&dstRect,
+				&textRect,
 				transform.rotation,
 				NULL,
 				SDL_FLIP_NONE);
