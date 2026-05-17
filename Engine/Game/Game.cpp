@@ -163,8 +163,9 @@ void Game::LoadLevel(int level)
     AssetStore::Get().AddFont("arial-font", "./Assets/Fonts/arial.ttf", 16);
     AssetStore::Get().AddFont("pico-font-10", "./Assets/Fonts/pico8.ttf", 10);
     AssetStore::Get().AddFont("pico-font-12", "./Assets/Fonts/pico8.ttf", 12);
-    // Music
+    // Music, Sounds
     AssetStore::Get().AddSound("helicopter-sound", "./Assets/Sounds/helicopter.wav");
+    AssetStore::Get().AddSound("gunshot-sound", "./Assets/Sounds/gunshot.wav");
     AssetStore::Get().AddSound("SFU-music", "./Assets/Sounds/SFU_@bigsmuggs.wav");
 
     // Load tile atlas texture (tileset image)
@@ -269,7 +270,7 @@ void Game::LoadLevel(int level)
     chopper.AddComponent<KeyboardControlledComponent>(glm::vec2(0, -120), glm::vec2(120, 0), glm::vec2(0, 120), glm::vec2(-120, 0));
     chopper.AddComponent<CameraFollowComponent>();
     chopper.AddComponent<HealthComponent>(100);
-    chopper.AddComponent<ProjectileEmitterComponent>(glm::vec2(150.0, 150.0), 0, 5000, 10, true, "bullet-image");
+    chopper.AddComponent<ProjectileEmitterComponent>(glm::vec2(150.0, 150.0), 0, 5000, 10, true, "bullet-image", "gunshot-sound");
     chopper.AddComponent<HealthBarComponent>("pico-font-10", glm::vec2(70, 0), glm::vec2(30, 10), glm::vec2(70, 20));
     chopper.AddComponent<SoundComponent>("helicopter-sound", true, 0.1f);
 
@@ -330,7 +331,7 @@ void Game::ProcessInput(SDL_Event& event)
 
         case SDL_EVENT_KEY_DOWN:
         {
-            _eventBus.EmitEvent<KeyPressedEvent>(event.key.scancode);
+            _eventBus.EmitEvent<KeyPressedEvent>(event.key.scancode, &_eventBus);
 
             switch (event.key.scancode)
             {

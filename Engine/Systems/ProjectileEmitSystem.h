@@ -8,6 +8,9 @@
 #include "Components/ProjectileComponent.h"
 #include "Components/LifecycleComponent.h"
 
+#include "EventBus/EventBus.h"
+#include "Events/PlaySoundEvent.h"
+
 class ProjectileEmitSystem : public System
 {
 public:
@@ -77,6 +80,12 @@ public:
 
 					// Update the projectile emitter component last emission to the current milliseconds
 					projectileEmitter.lastEmissionTimeInMs = SDL_GetTicks();
+
+					// Emit sound
+					if (event.eventBusPtr && !projectileEmitter.projectileSoundKey.empty())
+					{
+						event.eventBusPtr->EmitEvent<PlaySoundEvent>(projectileEmitter.projectileSoundKey);
+					}
 				}
 			}
 		}
