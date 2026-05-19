@@ -88,6 +88,12 @@ public:
         playingSound.loop = loop;
         playingSound.ownerEntityId = ownerEntityId;
 
+        if (!loop)
+        {
+            // Signal end of data for one-shot sounds
+            SDL_FlushAudioStream(stream);
+        }
+
         SDL_BindAudioStream(_device, stream);
 
         _playingSounds.push_back(playingSound);
