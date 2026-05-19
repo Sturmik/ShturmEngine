@@ -136,7 +136,9 @@ class Pool : public IPool
 public:
 	Pool(int size = 100)
 	{
-		_data.reserve(size);
+		_sparse.resize(size, -1);
+		_dense.resize(size);
+		_data.resize(size);
 	}
 
 	virtual ~Pool() = default;
@@ -151,65 +153,92 @@ public:
 		return _data.size();
 	}
 
-	void Resize(int n)
-	{
-		_data.resize(n);
-	}
-
 	void Clear()
 	{
 		_data.clear();
+		_dense.clear();
+		_sparse.clear();
 	}
 
-	void Add(T object)
+	bool Has(int entityId) const
 	{
-		_data.push_back(object);
+		if (entityId >= _sparse.size())
+		{
+			return false;
+		}
+
+		int index = _sparse[entityId];
+		return index != -1 &&
+			index < _dense.size() &&
+			_dense[index] == entityId;
 	}
 
 	void Set(int entityId, T object)
 	{
-		if (_entityIdToIndex.find(entityId) != _entityIdToIndex.end())
+		// Extend sparse array in case, it is not big enough
+		if (_sparse.size() <= entityId)
 		{
-			// If the element already exists, simply replace the component object
-			int index = _entityIdToIndex[entityId];
-			_data[index] = object;
+			_sparse.resize(entityId + 1, -1);
 		}
-		else
+
+		// Check, if element with this id exists in dense array
+		if (_sparse[entityId] == -1)
 		{
-			// When adding a new object, we keep track of the entity ids and their vector index
-			_entityIdToIndex.emplace(entityId, _data.size());
-			_indexToEntityId.emplace(_data.size(), entityId);
+			_sparse[entityId] = _dense.size();
+			_dense.push_back(entityId);
 			_data.push_back(object);
+			return;
 		}
+		
+		// Set new value
+		_data[_sparse[entityId]] = object;
 	}
 
 	virtual void Remove(int entityId) override
 	{
-		if (_entityIdToIndex.find(entityId) == _entityIdToIndex.end())
+		// Check, if it sparse array may contain this element
+		if (!Has(entityId))
 		{
 			return;
 		}
 
-		// Copy the last element to the deleted position to keep the array packed
-		int indexOfRemoved = _entityIdToIndex[entityId];
-		int indexOfLast = _data.size() - 1;
-		_data[indexOfRemoved] = _data[indexOfLast];
+		int removedIndex = _sparse[entityId];
 
-		// Update the index entity maps to point to the correct elements
-		int entityIdOfLastElement = _indexToEntityId[indexOfLast];
-		_entityIdToIndex[entityIdOfLastElement] = indexOfRemoved;
-		_indexToEntityId[indexOfRemoved] = entityIdOfLastElement;
+		int lastIndex = _data.size() - 1;
 
-		_entityIdToIndex.erase(entityId);
-		_indexToEntityId.erase(indexOfLast);
+		if (removedIndex == lastIndex)
+		{
+			_data.pop_back();
+			_dense.pop_back();
+			_sparse[entityId] = -1;
+			return;
+		}
 
-		_data.resize(_data.size() - 1);
+		int lastEntityId = _dense[lastIndex];
+
+		// Move last element into removed spot
+		_data[removedIndex] = _data[lastIndex];
+		_dense[removedIndex] = _dense[lastIndex];
+
+		// Update sparse mapping for moved entity
+		_sparse[lastEntityId] = removedIndex;
+
+		// Pop back
+		_data.pop_back();
+		_dense.pop_back();
+
+		// Mark removed entity
+		_sparse[entityId] = -1;
 	}
 
 	T& Get(int entityId)
 	{
-		int index = _entityIdToIndex[entityId];
-		return static_cast<T&>(_data[index]);
+		if (!Has(entityId))
+		{
+			throw std::runtime_error("Invalid entity access");
+		}
+
+		return _data[_sparse[entityId]];
 	}
 
 	T& operator[] (unsigned int entityId)
@@ -218,11 +247,30 @@ public:
 	}
 
 private:
-	std::vector<T> _data;
+	// Sparse lookup array:
+	// entity ID -> index inside dense/data arrays.
+	//
+	// Example:
+	// sparse[42] = 3
+	//
+	// means entity 42 is stored at:
+	// dense[3]
+	// data[3]
+	//
+	// Value of -1 means entity does not exist in this pool.
+	std::vector<int> _sparse;
 
-	// Helper maps to keep track of entity ids per index, so the vector is always packed
-	std::unordered_map<int, int> _entityIdToIndex;
-	std::unordered_map<int, int> _indexToEntityId;
+	// Packed array of entity IDs.
+	// dense[i] corresponds to data[i].
+	//
+	// Example:
+	// dense[0] = entity 5
+	// data[0]  = Transform of entity 5
+	std::vector<int> _dense;
+
+	// Packed array of component data.
+	// Components are stored contiguously in memory for cache efficiency.
+	std::vector<T> _data;
 };
 
 /////////////////////////////////////////////////////////////////////
