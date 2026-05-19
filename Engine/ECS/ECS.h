@@ -137,8 +137,8 @@ public:
 	Pool(int size = 100)
 	{
 		_sparse.resize(size, -1);
-		_dense.resize(size);
-		_data.resize(size);
+		_dense.reserve(size);
+		_data.reserve(size);
 	}
 
 	virtual ~Pool() = default;
