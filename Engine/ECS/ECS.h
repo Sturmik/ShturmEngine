@@ -7,6 +7,7 @@
 #include <set>
 #include <memory>
 #include <deque>
+#include <functional>
 
 #include "EventBus/EventBus.h"
 
@@ -84,6 +85,20 @@ private:
 	int _id;
 };
 
+namespace std
+{
+	template<>
+	struct hash<Entity>
+	{
+		std::size_t operator()(const Entity& entity) const noexcept
+		{
+			return std::hash<int>()(entity.GetId());
+		}
+	};
+}
+
+struct Archetype;
+
 /////////////////////////////////////////////////////////////////////
 // System
 /////////////////////////////////////////////////////////////////////
@@ -95,11 +110,12 @@ public:
 	System() = default;
 	~System() = default;
 
-	void AddEntityToSystem(Entity entity);
-	void RemoveEntityFromSystem(Entity entity);
-	const std::vector<Entity>& GetSystemEntities() const;
-	std::vector<Entity>& AccessSystemEntities();
+	void AddArchetype(std::shared_ptr<Archetype> archetype);
+	const std::vector<std::shared_ptr<Archetype>>& GetArchetypes() const;
+	std::vector<std::shared_ptr<Archetype>>& AccessArchetypes();
 	const Signature& GetComponentSignature() const;
+
+	void GetFlatVector(std::vector<Entity>& outEntities);
 
 	// Defines the component type that entities must have to be considered by the system
 	template<typename TComponent>
@@ -107,7 +123,7 @@ public:
 
 private:
 	Signature _componentSignature;
-	std::vector<Entity> _entities;
+	std::vector<std::shared_ptr<Archetype>> _archetypes;
 };
 
 template<typename TComponent>
@@ -117,160 +133,135 @@ void System::RequireComponent()
 	_componentSignature.set(componentId);
 }
 
-/////////////////////////////////////////////////////////////////////
-// Pool
-/////////////////////////////////////////////////////////////////////
-// A pool is just a vector (contigious data) of objects of type T
-/////////////////////////////////////////////////////////////////////
-class IPool
+// Column is used to define array of components
+struct IColumn
 {
-public:
-	virtual ~IPool() {}
+	virtual ~IColumn() = default;
+	virtual void RemoveSwapLast(uint32_t index) = 0;
 
-	virtual void Remove(int entityId) = 0;
+	virtual void CopyFrom(IColumn* source, uint32_t srcIndex, uint32_t dstIndex) = 0;
+
+	// Allows outter system to identify component type
+	virtual std::unique_ptr<IColumn> CloneEmpty() const = 0;
 };
 
 template<typename T>
-class Pool : public IPool
+struct Column : public IColumn
 {
-public:
-	Pool(int size = 100)
+	std::vector<T> data;
+	
+	void RemoveSwapLast(uint32_t index) override
 	{
-		_sparse.resize(size, -1);
-		_dense.reserve(size);
-		_data.reserve(size);
+		data[index] = std::move(data.back());
+		data.pop_back();
 	}
 
-	virtual ~Pool() = default;
-
-	bool IsEmpty() const
+	void Push(const T& value)
 	{
-		return _data.empty();
+		data.push_back(value);
 	}
 
-	int GetSize() const
+	T& Get(uint32_t index)
 	{
-		return _data.size();
+		return data[index];
 	}
 
-	void Clear()
+	void CopyFrom(IColumn* source, uint32_t sourceIndex, uint32_t destinationIndex) override
 	{
-		_data.clear();
-		_dense.clear();
-		_sparse.clear();
-	}
-
-	bool Has(int entityId) const
-	{
-		if (entityId >= _sparse.size())
-		{
-			return false;
+		Column<T>* sourceColumn = static_cast<Column<T>*>(source);
+		if (data.size() <= destinationIndex) 
+		{		
+			data.resize(destinationIndex + 1);
 		}
 
-		int index = _sparse[entityId];
-		return index != -1 &&
-			index < _dense.size() &&
-			_dense[index] == entityId;
+		data[destinationIndex] = sourceColumn->data[sourceIndex];
 	}
 
-	void Set(int entityId, T object)
+	std::unique_ptr<IColumn> CloneEmpty() const override
 	{
-		// Extend sparse array in case, it is not big enough
-		if (_sparse.size() <= entityId)
-		{
-			_sparse.resize(entityId + 1, -1);
-		}
-
-		// Check, if element with this id exists in dense array
-		if (_sparse[entityId] == -1)
-		{
-			_sparse[entityId] = _dense.size();
-			_dense.push_back(entityId);
-			_data.push_back(object);
-			return;
-		}
-		
-		// Set new value
-		_data[_sparse[entityId]] = object;
+		return std::make_unique<Column<T>>();
 	}
+};
 
-	virtual void Remove(int entityId) override
-	{
-		// Check, if it sparse array may contain this element
-		if (!Has(entityId))
-		{
-			return;
-		}
+/////////////////////////////////////////////////////////////////////
+// Archetype
+/////////////////////////////////////////////////////////////////////
+// An archetype represents a unique combination of component types.
+//
+// Example:
+//
+// Archetype A:
+// [Transform, Velocity]
+//
+// Archetype B:
+// [Transform, Sprite]
+//
+// Archetype C:
+// [Transform, Velocity, Health]
+//
+// Every entity belongs to exactly ONE archetype at a time,
+// depending on which components it currently owns.
+//
+// ------------------------------------------------------------------
+// Why archetypes exist
+// ------------------------------------------------------------------
+//
+// Archetypes store entities that have the same component layout
+// together in tightly packed contiguous arrays.
+//
+// This allows systems to iterate cache-friendly blocks of memory:
+//
+// Instead of:
+//
+//   Position of entity 1 somewhere in memory
+//   Position of entity 2 somewhere else
+//   Position of entity 3 somewhere else
+//
+// we get:
+//
+//   [P1][P2][P3][P4][P5]
+//
+// packed together sequentially.
+//
+// This drastically improves:
+// - CPU cache locality
+// - iteration speed
+// - SIMD/vectorization opportunities
+// - large-scale ECS performance
+// 
+// ------------------------------------------------------------------
+// Archetype layout
+// ------------------------------------------------------------------
+//
+// Each archetype acts similarly to a database table:
+//
+// -----------------------------------------------------
+// | Entity | Transform | Velocity | Health |
+// -----------------------------------------------------
+// |   1    |    ...    |    ...   |   ...  |
+// |   2    |    ...    |    ...   |   ...  |
+// -----------------------------------------------------
+//
+// Each component type is stored in its own dense column.
+/////////////////////////////////////////////////////////////////////
+struct Archetype
+{
+	// Component set
+	Signature signature; 
 
-		int removedIndex = _sparse[entityId];
+	// Rows
+	std::vector<Entity> entities;
 
-		int lastIndex = _data.size() - 1;
+	// Component array
+	// [componentId]->[componentArray]
+	std::vector<std::unique_ptr<IColumn>> columns;
+};
 
-		if (removedIndex == lastIndex)
-		{
-			_data.pop_back();
-			_dense.pop_back();
-			_sparse[entityId] = -1;
-			return;
-		}
-
-		int lastEntityId = _dense[lastIndex];
-
-		// Move last element into removed spot
-		_data[removedIndex] = _data[lastIndex];
-		_dense[removedIndex] = _dense[lastIndex];
-
-		// Update sparse mapping for moved entity
-		_sparse[lastEntityId] = removedIndex;
-
-		// Pop back
-		_data.pop_back();
-		_dense.pop_back();
-
-		// Mark removed entity
-		_sparse[entityId] = -1;
-	}
-
-	T& Get(int entityId)
-	{
-		if (!Has(entityId))
-		{
-			throw std::runtime_error("Invalid entity access");
-		}
-
-		return _data[_sparse[entityId]];
-	}
-
-	T& operator[] (unsigned int entityId)
-	{
-		return Get(entityId);
-	}
-
-private:
-	// Sparse lookup array:
-	// entity ID -> index inside dense/data arrays.
-	//
-	// Example:
-	// sparse[42] = 3
-	//
-	// means entity 42 is stored at:
-	// dense[3]
-	// data[3]
-	//
-	// Value of -1 means entity does not exist in this pool.
-	std::vector<int> _sparse;
-
-	// Packed array of entity IDs.
-	// dense[i] corresponds to data[i].
-	//
-	// Example:
-	// dense[0] = entity 5
-	// data[0]  = Transform of entity 5
-	std::vector<int> _dense;
-
-	// Packed array of component data.
-	// Components are stored contiguously in memory for cache efficiency.
-	std::vector<T> _data;
+// location of element in archetype
+struct Location
+{
+	std::shared_ptr<Archetype> archetype;
+	uint32_t row;
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -282,7 +273,7 @@ private:
 class Registry
 {
 public: 
-	Registry() : _numEntities(0), _eventBusPtr(nullptr) { LOG_INFO("Registry constructor called!"); }
+	Registry() : _numEntities(0), _eventBusPtr(nullptr), _bShouldRefreshSystemArchetypes(false) { LOG_INFO("Registry constructor called!"); }
 	~Registry() { LOG_INFO("Registry destructor called!"); }
 
 	void Update();
@@ -326,10 +317,8 @@ public:
 	template<typename TSystem>
 	TSystem& GetSystem() const;
 
-	// Checks the component signature of an entity and add the entity to the systems that are interested in it
-	// Add or remove entities from their systems
-	void AddEntityToSystems(Entity entity);
-	void RemoveEntityFromSystems(Entity entity);
+	// Refreshes system archetypes and adds new ones
+	void RefreshSystemArchetypes();
 
 	// Sets event bus for handling callbacks
 	void SetEventBus(EventBus* eventBusPtr) 
@@ -340,12 +329,35 @@ public:
 	void ClearAll();
 
 private:
+	// Ensure component registration
+	template<typename TComponent>
+	void EnsureComponentRegistered();
+
+	// Fully destroyes entity from the system
+	void DestroyEntity(Entity entity);
+
+	// Logic for creating columns with specific components
+	std::unique_ptr<IColumn> CreateColumn(int componentId);
+
+	// Archetype logic
+	std::shared_ptr<Archetype> CreateOrGetArchetype(Signature archetypeSignature);
+	void RemoveEntityFromArchetype(std::shared_ptr<Archetype> archetype, uint32_t row);
+	void MoveEntity(Location& oldLocation, std::shared_ptr<Archetype> newArchetype, uint32_t newRow);
+
+	// Component column factory
+	using ColumnCreateFunc = std::function<std::unique_ptr<IColumn>()>;
+	std::unordered_map<int, ColumnCreateFunc> _componentColumnCreators;
+
 	int _numEntities;
 
-	// Vector of component pools, each pool contains all the data for a certain component type
-	// [Vector index = component type id]
-	// [Pool index = entity id]
-	std::vector<std::shared_ptr<IPool>> _componentPools;
+	// Archetypes are mapped by component signatures
+	std::unordered_map<Signature, std::shared_ptr<Archetype>> _archetypes;
+
+	// Map entity to according location
+	std::unordered_map<Entity, Location> _locations;
+
+	// Used as a control variable to define whether system archetype refresh is required
+	bool _bShouldRefreshSystemArchetypes;
 
 	// Vector of component signatures per entity, saying which component is turned "on" for a given entity
 	// [Vector index = entity id]
@@ -355,8 +367,6 @@ private:
 	std::unordered_map<std::type_index, std::shared_ptr<System>> _systems;
 
 	// Set of entities that are flagged to be added or removed in the next registry Update()
-	std::set<Entity> _entitiesToBeAdded;
-	std::set<Entity> _entitiesToBeModified;
 	std::set<Entity> _entitiesToBeKilled;
 
 	// Entity tags (one tag name per entity)
@@ -374,36 +384,62 @@ private:
 	EventBus* _eventBusPtr;
 };
 
+template<typename TComponent>
+void Registry::EnsureComponentRegistered()
+{
+	static bool registered = false;
+	if (registered)
+	{
+		return;
+	}
+
+	int id = Component<TComponent>::GetId();
+	_componentColumnCreators[id] = []() {
+		return std::make_unique<Column<TComponent>>();
+	};
+	registered = true;
+
+	LOG_INFO("ECS system registered new component for column creation: %i id", id);
+}
+
 template<typename TComponent, typename ...TArgs>
 void Registry::AddComponent(Entity entity, TArgs&& ...args)
 {
-	const int componentId = Component<TComponent>::GetId();
+	EnsureComponentRegistered<TComponent>();
+
 	const int entityId = entity.GetId();
+	const int componentId = Component<TComponent>::GetId();
 
-	// If the component id is greater than the current size of the componentPools, then resize the vector
-	if (componentId >= _componentPools.size())
+	Location& oldLocation = _locations[entity];
+	Signature oldSignature = oldLocation.archetype ? oldLocation.archetype->signature : Signature();
+
+	// Build new signature
+	Signature newSignature = oldSignature;
+	newSignature.set(componentId);
+
+	// Find or create target archetype
+	std::shared_ptr<Archetype> targetArchetype = CreateOrGetArchetype(newSignature);
+	
+	// Create new row in target archetype
+	uint32_t newRow = targetArchetype->entities.size();
+	targetArchetype->entities.push_back(entity);
+
+	Column<TComponent>* column = static_cast<Column<TComponent>*>(targetArchetype->columns[componentId].get());
+	column->Push(TComponent(std::forward<TArgs>(args)...));
+
+	// If entity already exists - move it
+	if (oldLocation.archetype)
 	{
-		_componentPools.resize(componentId + 1, nullptr);
+		MoveEntity(oldLocation, targetArchetype, newRow);
+	}
+	else
+	{
+		oldLocation.archetype = targetArchetype;
+		oldLocation.row = newRow;
 	}
 
-	// If we still don't have a Pool for that component type
-	if (_componentPools[componentId] == nullptr)
-	{
-		std::shared_ptr<Pool<TComponent>> newComponentPool = std::make_shared<Pool<TComponent>>();
-		_componentPools[componentId] = newComponentPool;
-	}
-
-	// Get the pool of component values for that component type
-	std::shared_ptr<Pool<TComponent>> componentPool = std::static_pointer_cast<Pool<TComponent>>(_componentPools[componentId]);
-
-	// Create a new Component object of the type T, and forward the various parameters to the constructor
-	TComponent newComponent(std::forward<TArgs>(args)...);
-
-	// Add the new component to the component pool list, using the entity id as index
-	componentPool->Set(entityId, newComponent);
-
-	// Change the component signature of the entity and set the component id on the bitset to 1
-	_entityComponentSignatures[entityId].set(componentId);
+	// Update entity component signature
+	_entityComponentSignatures[entityId] = newSignature;
 
 	LOG_INFO("Component id = %d was added to entity id %d", componentId, entityId);
 }
@@ -411,17 +447,37 @@ void Registry::AddComponent(Entity entity, TArgs&& ...args)
 template<typename TComponent>
 void Registry::RemoveComponent(Entity entity)
 {
-	const int componentId = Component<TComponent>::GetId();
 	const int entityId = entity.GetId();
+	const int componentId = Component<TComponent>::GetId();
+
+	Location& oldLocation = _locations[entity];
+	Signature oldSignature = oldLocation.archetype ? oldLocation.archetype->signature : Signature();
+
+	// Build new signature
+	Signature newSignature = oldSignature;
+	// Remove bit for old component
+	newSignature.set(componentId, false);
+
+	// Find or create target archetype
+	std::shared_ptr<Archetype> targetArchetype = CreateOrGetArchetype(newSignature);
+
+	// Create new row in target archetype
+	uint32_t newRow = targetArchetype->entities.size();
+	targetArchetype->entities.push_back(entity);
+
+	// If entity already exists - move it
+	if (oldLocation.archetype)
+	{
+		MoveEntity(oldLocation, targetArchetype, newRow);
+	}
+	else
+	{
+		oldLocation.archetype = targetArchetype;
+		oldLocation.row = newRow;
+	}
 
 	// Set this component signature for that entity to false
 	_entityComponentSignatures[entityId].set(componentId, false);
-
-	// Get the pool of component values for that component type
-	std::shared_ptr<Pool<TComponent>> componentPool = std::static_pointer_cast<Pool<TComponent>>(_componentPools[componentId]);
-	componentPool->Remove(entityId);
-
-	_entitiesToBeModified.insert(entity);
 
 	LOG_INFO("Component id = %d was removed from entity id %d", componentId, entityId);
 }
@@ -439,11 +495,15 @@ template<typename TComponent>
 TComponent& Registry::GetComponent(Entity entity) const
 {
 	const int componentId = Component<TComponent>::GetId();
-	const int entityId = entity.GetId();
 
-	std::shared_ptr<Pool<TComponent>> componentPool = std::static_pointer_cast<Pool<TComponent>>(_componentPools[componentId]);
+	// Get location and component index
+	const Location& location = _locations.at(entity);
+	int componentIndex = location.row;
 
-	return componentPool->Get(entityId);
+	// Get according column type
+	Column<TComponent>* column = static_cast<Column<TComponent>*>(location.archetype->columns[componentId].get());
+
+	return column->Get(componentIndex);
 }
 
 template<typename TSystem, typename ...TArgs>

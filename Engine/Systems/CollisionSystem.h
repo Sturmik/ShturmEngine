@@ -16,11 +16,14 @@ public:
 
 	void Update(EventBus& eventBus)
 	{
+		std::vector<Entity> entities;
+		GetFlatVector(entities);
+
 		// Loop all entities that the system is interested in
-		for (int i = 0; i < AccessSystemEntities().size(); ++i)
+		for (int i = 0; i < entities.size(); ++i)
 		{
 			// Get current entity
-			const Entity& currentEntity = AccessSystemEntities()[i];
+			const Entity& currentEntity = entities[i];
 
 			// Get transform and box collider component
 			BoxColliderComponent& currentBoxCollider = currentEntity.GetComponent<BoxColliderComponent>();
@@ -30,20 +33,20 @@ public:
 		}
 
 		// Loop all entities that the system is interested in
-		for (int i = 0; i < AccessSystemEntities().size(); ++i)
+		for (int i = 0; i < entities.size(); ++i)
 		{
 			// Get current entity
-			Entity& currentEntity = AccessSystemEntities()[i];
+			Entity& currentEntity = entities[i];
 
 			// Get transform and box collider component
 			const TransformComponent& currentTransform = currentEntity.GetComponent<TransformComponent>();
 			BoxColliderComponent& currentBoxCollider = currentEntity.GetComponent<BoxColliderComponent>();
 
 			// Test collision against other entities
-			for (int j = i + 1; j < AccessSystemEntities().size(); ++j)
+			for (int j = i + 1; j < entities.size(); ++j)
 			{
 				// Get other entity
-				Entity& otherEntity = AccessSystemEntities()[j];
+				Entity& otherEntity = entities[j];
 
 				if (currentEntity == otherEntity)
 				{
@@ -71,7 +74,7 @@ public:
 
 					eventBus.EmitEvent<CollisionEvent>(currentEntity, otherEntity);
 
-					LOG_INFO("Entity %d collided with entity %d", AccessSystemEntities()[i].GetId(), AccessSystemEntities()[j].GetId());
+					LOG_INFO("Entity %d collided with entity %d", entities[i].GetId(), entities[j].GetId());
 				}
 			}
 		}

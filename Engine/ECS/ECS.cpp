@@ -43,39 +43,35 @@ Registry& Entity::AccessRegistry()
     return *_registry;
 }
 
-void System::AddEntityToSystem(Entity entity)
+void System::AddArchetype(std::shared_ptr<Archetype> archetype)
 {
-    auto it = std::find_if(_entities.begin(), _entities.end(),
-        [&entity](const Entity& other) {
-            return entity == other;
-        });
-
-    if (it == _entities.end())
+    // Verify that archetype signature matches system signature
+    if ((archetype->signature & _componentSignature) != _componentSignature)
     {
-        _entities.emplace_back(entity);
+        return;
     }
+
+    // Check, if such archetype already exists
+    for (std::shared_ptr<Archetype> existingArchetype : _archetypes)
+    {
+        if (existingArchetype == archetype)
+        {
+            return;
+        }
+    }
+
+    // Add new archetype to the array
+    _archetypes.push_back(archetype);
 }
 
-void System::RemoveEntityFromSystem(Entity entity)
+const std::vector<std::shared_ptr<Archetype>>& System::GetArchetypes() const
 {
-    _entities.erase(
-        std::remove_if(_entities.begin(), _entities.end(),
-            [&entity](const Entity& other)
-            {
-                return entity == other;
-            }),
-        _entities.end()
-    );
+    return _archetypes;
 }
 
-const std::vector<Entity>& System::GetSystemEntities() const
+std::vector<std::shared_ptr<Archetype>>& System::AccessArchetypes()
 {
-    return _entities;
-}
-
-std::vector<Entity>& System::AccessSystemEntities()
-{
-	return _entities;
+	return _archetypes;
 }
 
 const Signature& System::GetComponentSignature() const
@@ -83,49 +79,30 @@ const Signature& System::GetComponentSignature() const
 	return _componentSignature;
 }
 
+void System::GetFlatVector(std::vector<Entity>& outEntities)
+{
+    for (std::shared_ptr<Archetype>& archetype : AccessArchetypes())
+    {
+        // Loop all entities that the system is interested in
+        for (Entity& entity : archetype->entities)
+        {
+            outEntities.push_back(entity);
+        }
+    }
+}
+
 void Registry::Update()
 {
-    // Processing the entities that are waiting to be created to the active Systems
-    for (Entity entity : _entitiesToBeAdded)
+    // Refreshes archetypes in systems in case of such need
+    if (_bShouldRefreshSystemArchetypes)
     {
-        // Add entity to according systems
-        AddEntityToSystems(entity);
+        RefreshSystemArchetypes();
     }
-    _entitiesToBeAdded.clear();
-
-    // Processing the entities that are modified
-    for (Entity entity : _entitiesToBeModified)
-    {
-        // Remove entity from all systems
-        RemoveEntityFromSystems(entity);
-
-        // Add entity to according systems
-        AddEntityToSystems(entity);
-    }
-    _entitiesToBeModified.clear();
 
     // Processing the entities that are waiting to be killed from the active Systems
     for (Entity entity : _entitiesToBeKilled)
     {
-        // Remove entity from all systems
-        RemoveEntityFromSystems(entity);
-
-        // Remove the entity from the component pools
-        for (std::shared_ptr<IPool> pool : _componentPools)
-        {
-            if (pool)
-            {
-                pool->Remove(entity.GetId());
-            }
-        }
-
-        // Reset entity component signature, which is basically removing all components from it
-        _entityComponentSignatures[entity.GetId()].reset();
-
-        // Make the entity id available to be used
-        _freeIds.push_back(entity.GetId());
-        
-        LOG_INFO("Entity %d is killed", entity.GetId());
+        DestroyEntity(entity);
     }
     _entitiesToBeKilled.clear();
 }
@@ -147,7 +124,6 @@ Entity Registry::CreateEntity()
     }
 
     Entity entity(entityId, this);
-    _entitiesToBeAdded.insert(entity);
 
     if (entityId >= _entityComponentSignatures.size())
     {
@@ -258,41 +234,27 @@ void Registry::RemoveEntityGroup(Entity entity)
     _groupPerEntity.erase(entity.GetId());
 }
 
-void Registry::AddEntityToSystems(Entity entity)
+void Registry::RefreshSystemArchetypes()
 {
-    const int entityId = entity.GetId();
-
-    const Signature entityComponentSignature = _entityComponentSignatures[entityId];
-
     // Loop all systems
     for (std::pair<const std::type_index, std::shared_ptr<System>>& systemPair : _systems)
     {
-        const Signature& systemComponentSignature = systemPair.second->GetComponentSignature();
-        
-        bool isInterested = (systemComponentSignature & entityComponentSignature) == systemComponentSignature;
-    
-        if (isInterested)
+        // Loop all archetypes
+        for (std::pair<const Signature, std::shared_ptr<Archetype>>& archetype : _archetypes)
         {
-            systemPair.second->AddEntityToSystem(entity);
+            // Try to add new archetype
+            systemPair.second->AddArchetype(archetype.second);
         }
     }
-}
 
-void Registry::RemoveEntityFromSystems(Entity entity)
-{
-    // Loop all systems
-    for (std::pair<const std::type_index, std::shared_ptr<System>>& systemPair : _systems)
-    {
-        systemPair.second->RemoveEntityFromSystem(entity);
-    }
+    _bShouldRefreshSystemArchetypes = false;
 }
 
 void Registry::ClearAll()
 {
-    _componentPools.clear();
+    _archetypes.clear();
+    _locations.clear();
     _systems.clear();
-    _entitiesToBeAdded.clear();
-    _entitiesToBeModified.clear();
     _entitiesToBeKilled.clear();
     _entityPerTag.clear();
     _tagPerEntity.clear();
@@ -300,3 +262,121 @@ void Registry::ClearAll()
     _groupPerEntity.clear();
     _freeIds.clear();
 };
+
+std::shared_ptr<Archetype> Registry::CreateOrGetArchetype(Signature archetypeSignature)
+{
+    // Find or create target archetype
+    std::shared_ptr<Archetype>& targetArchetype = _archetypes[archetypeSignature];
+    if (targetArchetype == nullptr)
+    {
+        // Initialize target archetype
+        targetArchetype = std::make_shared<Archetype>();
+        targetArchetype->signature = archetypeSignature;
+        LOG_INFO("New archetype created: %s", archetypeSignature.to_string().c_str());
+
+        // Initialize target archetype columns according to signature
+        targetArchetype->columns.resize(MAX_COMPONENTS);
+
+        // Mark the need to update system archetypes
+        _bShouldRefreshSystemArchetypes = true;
+    }
+
+    // Ensure all required columns exist
+    for (int i = 0; i < MAX_COMPONENTS; ++i)
+    {
+        if (archetypeSignature.test(i) && targetArchetype->columns[i] == nullptr)
+        {
+            targetArchetype->columns[i] = CreateColumn(i);
+        }
+    }
+
+    return targetArchetype;
+}
+
+void Registry::RemoveEntityFromArchetype(std::shared_ptr<Archetype> archetype, uint32_t row)
+{
+    if (archetype->entities.empty() || row >= archetype->entities.size()) 
+    {
+        return;
+    }
+
+    // Get last entity id in archetype
+    Entity lastEntity = archetype->entities[archetype->entities.size() - 1];
+
+    // Swap last element with old element location
+    archetype->entities[row] = lastEntity;
+    for (int i = 0; i < archetype->columns.size(); ++i)
+    {
+        if (archetype->columns[i] != nullptr)
+        {
+            archetype->columns[i]->RemoveSwapLast(row);
+        }
+    }
+    archetype->entities.pop_back();
+
+    // Update last entity location
+    _locations[lastEntity].row = row;
+}
+
+void Registry::MoveEntity(Location& oldLocation, std::shared_ptr<Archetype> newArchetype, uint32_t newRow)
+{
+    // Get old archetype
+    std::shared_ptr<Archetype> oldArchetype = oldLocation.archetype; 
+
+    // Get old row
+    uint32_t oldRow = oldLocation.row;
+
+    // Copy all components that existed in old archetype to the new one
+    for (int i = 0; i < oldArchetype->columns.size(); ++i)
+    {
+        if (oldArchetype->signature.test(i) &&
+            newArchetype->signature.test(i) &&
+            oldArchetype->columns[i] &&
+            newArchetype->columns[i])
+        {
+            newArchetype->columns[i]->CopyFrom(oldArchetype->columns[i].get(), oldRow, newRow);
+        }
+    }
+
+    // Remove entity from archetype
+    RemoveEntityFromArchetype(oldArchetype, oldRow);
+
+    // Update old location with new archetype and row
+    oldLocation.archetype = newArchetype;
+    oldLocation.row = newRow;
+}
+
+void Registry::DestroyEntity(Entity entity)
+{
+    auto it = _locations.find(entity);
+    if (it == _locations.end())
+    {
+        return;
+    }
+
+    Location& location = it->second;
+
+    // Remove entity from archetypes
+    RemoveEntityFromArchetype(location.archetype, location.row);
+
+    // Clean up tracking
+    _locations.erase(entity);
+    _entityComponentSignatures[entity.GetId()].reset();
+
+    // Return ID to pool
+    _freeIds.push_back(entity.GetId());
+
+    LOG_INFO("Entity %d fully destroyed", entity.GetId());
+}
+
+std::unique_ptr<IColumn> Registry::CreateColumn(int componentId)
+{
+    auto it = _componentColumnCreators.find(componentId);
+    if (it != _componentColumnCreators.end())
+    {
+        return it->second();
+    }
+
+    LOG_ERROR("No column creator registered for component ID %d", componentId);
+    return nullptr;
+}

@@ -19,8 +19,11 @@ public:
 
 	void Update(SDL_Renderer& renderer, AssetStore& assetStore, SDL_FRect& camera)
 	{
+		std::vector<Entity> entities;
+		GetFlatVector(entities);
+
 		// Sort entities by their z-index before rendering them
-		std::sort(AccessSystemEntities().begin(), AccessSystemEntities().end(), [](const Entity& a, const Entity& b)
+		std::sort(entities.begin(), entities.end(), [](const Entity& a, const Entity& b)
 		{
 			const SpriteComponent& spriteA = a.GetComponent<SpriteComponent>();
 			const SpriteComponent& spriteB = b.GetComponent<SpriteComponent>();
@@ -29,7 +32,7 @@ public:
 		});
 
 		// Loop all entities that the system is interested in
-		for (Entity& entity : AccessSystemEntities())
+		for (Entity& entity : entities)
 		{
 			const TransformComponent& transform = entity.GetComponent<TransformComponent>();
 			const SpriteComponent& sprite = entity.GetComponent<SpriteComponent>();
@@ -46,13 +49,13 @@ public:
 			};
 
 			// Draw the PNG texture
-			SDL_RenderTextureRotated(&renderer, 
-			assetStore.GetTexture(sprite.assetId), 
-			&srcRect, 
-			&dstRect, 
-			transform.rotation,
-			NULL, 
-			SDL_FLIP_NONE);
+			SDL_RenderTextureRotated(&renderer,
+				assetStore.GetTexture(sprite.assetId),
+				&srcRect,
+				&dstRect,
+				transform.rotation,
+				NULL,
+				SDL_FLIP_NONE);
 		}
 	}
 };

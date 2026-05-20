@@ -16,15 +16,20 @@ public:
 
 	void Update()
 	{
-		for (const Entity& entity : GetSystemEntities())
+		for (std::shared_ptr<Archetype>& archetype : AccessArchetypes())
 		{
-			SpriteComponent& sprite = entity.GetComponent<SpriteComponent>();
-			AnimationComponent& animation = entity.GetComponent<AnimationComponent>();
+			std::vector<Entity>& entities = archetype->entities;
 
-			animation.currentFrame = ((SDL_GetTicks() - animation.startTimeInMs) *
-			animation.frameRateSpeedPerSecond / 1000) % animation.numFrames;
+			for (const Entity& entity : entities)
+			{
+				SpriteComponent& sprite = entity.GetComponent<SpriteComponent>();
+				AnimationComponent& animation = entity.GetComponent<AnimationComponent>();
 
-			sprite.srcRect.x = animation.currentFrame * sprite.width;
+				animation.currentFrame = ((SDL_GetTicks() - animation.startTimeInMs) *
+				animation.frameRateSpeedPerSecond / 1000) % animation.numFrames;
+
+				sprite.srcRect.x = animation.currentFrame * sprite.width;
+			}
 		}
 	}
 };

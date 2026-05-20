@@ -46,15 +46,20 @@ public:
 
     void Update()
     {
-        // Handle entity-attached sounds (e.g. looping engine sound)
-        for (Entity& entity : AccessSystemEntities())
+        for (std::shared_ptr<Archetype>& archetype : AccessArchetypes())
         {
-            SoundComponent& sound = entity.GetComponent<SoundComponent>();
-            if (!sound.isInitialized && !sound.assetId.empty())
+            std::vector<Entity>& entities = archetype->entities;
+
+            // Handle entity-attached sounds (e.g. looping engine sound)
+            for (Entity& entity : entities)
             {
-                PlaySound(sound.assetId, sound.loop, sound.volume, entity.GetId());
-                // one-shot trigger
-                sound.isInitialized = true;
+                SoundComponent& sound = entity.GetComponent<SoundComponent>();
+                if (!sound.isInitialized && !sound.assetId.empty())
+                {
+                    PlaySound(sound.assetId, sound.loop, sound.volume, entity.GetId());
+                    // one-shot trigger
+                    sound.isInitialized = true;
+                }
             }
         }
 
@@ -111,7 +116,7 @@ private:
 
     void OnKillEntity(KillEntityEvent& event)
     {
-        // Remove all sounds belonging to the killed entity
+        // RemoveSwapLast all sounds belonging to the killed entity
         auto removeBegin = std::remove_if(_playingSounds.begin(), _playingSounds.end(),
             [&](const PlayingSound& ps)
             {
@@ -135,7 +140,7 @@ private:
     {
         for (auto it = _playingSounds.begin(); it != _playingSounds.end(); )
         {
-            // Remove 
+            // RemoveSwapLast 
             if (SDL_GetAudioStreamAvailable(it->stream) == 0 && !it->loop)
             {
                 SDL_DestroyAudioStream(it->stream);
