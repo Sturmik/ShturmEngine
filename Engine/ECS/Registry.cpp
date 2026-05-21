@@ -1,94 +1,17 @@
-#include "ECS.h"
+#include "Registry.h"
 
-#include "Events/KilLEntityEvent.h"
+#include "Events/KillEntityEvent.h"
 
-int IComponent::nextId = 0;
+#include "Logger/LoggerMacro.h"
 
-Entity::Entity(int id, Registry* registry) : _id(id), _registry(registry)
+Registry::Registry() : _numEntities(0), _eventBusPtr(nullptr), _bShouldRefreshSystemArchetypes(false)
 {
+    LOG_INFO("Registry constructor called!");
 }
 
-void Entity::Kill()
-{
-    _registry->KillEntity(*this);
-}
-
-int Entity::GetId() const
-{
-	return _id;
-}
-
-void Entity::Tag(const std::string& tag)
-{
-    _registry->TagEntity(*this, tag);
-}
-
-bool Entity::HasTag(const std::string& tag) const
-{
-    return _registry->EntityHasTag(*this, tag);
-}
-
-void Entity::Group(const std::string& group)
-{
-    _registry->GroupEntity(*this, group);
-}
-
-bool Entity::BelongsToGroup(const std::string& group) const
-{
-    return _registry->EntityBelongsToGroup(*this, group);
-}
-
-Registry& Entity::AccessRegistry()
-{
-    return *_registry;
-}
-
-void System::AddArchetype(std::shared_ptr<Archetype> archetype)
-{
-    // Verify that archetype signature matches system signature
-    if ((archetype->signature & _componentSignature) != _componentSignature)
-    {
-        return;
-    }
-
-    // Check, if such archetype already exists
-    for (std::shared_ptr<Archetype> existingArchetype : _archetypes)
-    {
-        if (existingArchetype == archetype)
-        {
-            return;
-        }
-    }
-
-    // Add new archetype to the array
-    _archetypes.push_back(archetype);
-}
-
-const std::vector<std::shared_ptr<Archetype>>& System::GetArchetypes() const
-{
-    return _archetypes;
-}
-
-std::vector<std::shared_ptr<Archetype>>& System::AccessArchetypes()
-{
-	return _archetypes;
-}
-
-const Signature& System::GetComponentSignature() const
-{
-	return _componentSignature;
-}
-
-void System::GetFlatVector(std::vector<Entity>& outEntities)
-{
-    for (std::shared_ptr<Archetype>& archetype : AccessArchetypes())
-    {
-        // Loop all entities that the system is interested in
-        for (Entity& entity : archetype->entities)
-        {
-            outEntities.push_back(entity);
-        }
-    }
+Registry::~Registry() 
+{ 
+    LOG_INFO("Registry destructor called!"); 
 }
 
 void Registry::Update()
@@ -295,7 +218,7 @@ std::shared_ptr<Archetype> Registry::CreateOrGetArchetype(Signature archetypeSig
 
 void Registry::RemoveEntityFromArchetype(std::shared_ptr<Archetype> archetype, uint32_t row)
 {
-    if (archetype->entities.empty() || row >= archetype->entities.size()) 
+    if (archetype->entities.empty() || row >= archetype->entities.size())
     {
         return;
     }
@@ -321,7 +244,7 @@ void Registry::RemoveEntityFromArchetype(std::shared_ptr<Archetype> archetype, u
 void Registry::MoveEntity(Location& oldLocation, std::shared_ptr<Archetype> newArchetype, uint32_t newRow)
 {
     // Get old archetype
-    std::shared_ptr<Archetype> oldArchetype = oldLocation.archetype; 
+    std::shared_ptr<Archetype> oldArchetype = oldLocation.archetype;
 
     // Get old row
     uint32_t oldRow = oldLocation.row;

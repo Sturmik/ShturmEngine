@@ -2,9 +2,15 @@
 
 add_library(Engine STATIC
     Logger/Logger.cpp
-    ECS/ECS.cpp
+    
     Game/Game.cpp
-    AssetStore/AssetStore.cpp)
+    AssetStore/AssetStore.cpp 
+    
+    ECS/Entity.cpp 
+    ECS/System.cpp 
+    ECS/Registry.cpp 
+    ECS/Component.cpp
+)
 
 target_include_directories(Engine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
