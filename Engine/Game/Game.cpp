@@ -26,7 +26,6 @@
 
 Game::Game() : _isRunning(false), _isDebug(false), _window(nullptr), _renderer(nullptr), _camera(), _mapWidth(0), _mapHeight(0), _audioDevice(0)
 {
-    _registry.SetEventBus(&_eventBus);
 	LOG_INFO("Game constructor called!");
 }
 
@@ -393,7 +392,7 @@ void Game::Update()
     _registry.GetSystem<CameraMovementSystem>().Update(_camera, GetMapSize());
     _registry.GetSystem<ProjectileEmitSystem>().Update( _registry);
     _registry.GetSystem<LifecycleSystem>().Update();
-    _registry.GetSystem<SoundSystem>().Update();
+    _registry.GetSystem<SoundSystem>().Update(_registry);
 }
 
 void Game::Render()

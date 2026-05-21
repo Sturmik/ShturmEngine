@@ -1,10 +1,8 @@
 #include "Registry.h"
 
-#include "Events/KillEntityEvent.h"
-
 #include "Logger/LoggerMacro.h"
 
-Registry::Registry() : _numEntities(0), _eventBusPtr(nullptr), _bShouldRefreshSystemArchetypes(false)
+Registry::Registry() : _numEntities(0), _bShouldRefreshSystemArchetypes(false)
 {
     LOG_INFO("Registry constructor called!");
 }
@@ -38,22 +36,28 @@ Entity Registry::CreateEntity()
     {
         // If there are no free ids waiting to be reused
         entityId = _numEntities++;
+        // Increase entity version array to hold data about new version
+        if (entityId >= _entityVersions.size())
+        {
+            _entityVersions.resize(entityId + 1, 0);
+        }
     }
     else
     {
         // Reuse and id from the list of previously removed entities
         entityId = _freeIds.front();
         _freeIds.pop_front();
+        _entityVersions[entityId]++;
     }
 
-    Entity entity(entityId, this);
+    Entity entity(entityId, _entityVersions[entityId], this);
 
     if (entityId >= _entityComponentSignatures.size())
     {
         _entityComponentSignatures.resize(entityId + 1);
     }
 
-    LOG_INFO("Entity created with id = %d", entityId);
+    LOG_INFO("Entity created with id = %d and version = %d", entityId, _entityVersions[entityId]);
 
     return entity;
 }
@@ -61,11 +65,18 @@ Entity Registry::CreateEntity()
 void Registry::KillEntity(Entity entity)
 {
     _entitiesToBeKilled.insert(entity);
+}
 
-    if (_eventBusPtr)
+bool Registry::IsEntityAlive(Entity entity) const
+{
+    // Check, if entity has incorrect id or it's id is larger than supported versions array
+    if (entity.GetId() < 0 || entity.GetId() >= _entityVersions.size())
     {
-        _eventBusPtr->EmitEvent<KillEntityEvent>(entity.GetId());
+        return false;
     }
+    
+    // Check, if entity exists at any location and it's version is equal to the versions array
+    return _locations.find(entity) != _locations.end() && _entityVersions[entity.GetId()] == entity.GetVersion();
 }
 
 void Registry::TagEntity(Entity entity, const std::string& tag)
@@ -289,7 +300,7 @@ void Registry::DestroyEntity(Entity entity)
     // Return ID to pool
     _freeIds.push_back(entity.GetId());
 
-    LOG_INFO("Entity %d fully destroyed", entity.GetId());
+    LOG_INFO("Entity %d (version %d) fully destroyed", entity.GetId(), entity.GetVersion());
 }
 
 std::unique_ptr<IColumn> Registry::CreateColumn(int componentId)

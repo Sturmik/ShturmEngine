@@ -2,7 +2,7 @@
 
 #include "Registry.h"
 
-Entity::Entity(int id, Registry* registry) : _id(id), _registry(registry)
+Entity::Entity(int id, int version, Registry* registry) : _id(id), _version(version), _registry(registry)
 {
 }
 
@@ -14,6 +14,11 @@ void Entity::Kill()
 int Entity::GetId() const
 {
     return _id;
+}
+
+uint32_t Entity::GetVersion() const
+{
+    return _version;
 }
 
 void Entity::Tag(const std::string& tag)

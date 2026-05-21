@@ -9,6 +9,7 @@ public:
     std::string assetId;
     bool loop;
     float volume;
+    Entity entityOwner;
 
     PlaySoundEvent(const std::string& assetId, bool loop = false, float volume = 1.0f)
         : assetId(assetId), loop(loop), volume(volume) {}

@@ -7,12 +7,13 @@
 #include "Entity.h"
 #include "System.h"
 
-#include "EventBus/EventBus.h"
-
 #include <functional>
 #include <unordered_map>
 #include <set>
 #include <deque>
+#include <typeindex>
+
+#include "Logger/LoggerMacro.h"
 
 /////////////////////////////////////////////////////////////////////
 // Registry
@@ -32,14 +33,17 @@ public:
 
 	Entity CreateEntity();
 	void KillEntity(Entity entity);
+	bool IsEntityAlive(Entity entity) const;
 
 	// Tag management
+
 	void TagEntity(Entity entity, const std::string& tag);
 	bool EntityHasTag(Entity entity, const std::string& tag) const;
 	Entity GetEntityByTag(const std::string& tag) const;
 	void RemoveEntityTag(Entity entity);
 
 	// Group management
+
 	void GroupEntity(Entity entity, const std::string& group);
 	bool EntityBelongsToGroup(Entity entity, const std::string& group) const;
 	std::vector<Entity> GetEntitiesByGroup(const std::string& group) const;
@@ -69,12 +73,6 @@ public:
 
 	// Refreshes system archetypes and adds new ones
 	void RefreshSystemArchetypes();
-
-	// Sets event bus for handling callbacks
-	void SetEventBus(EventBus* eventBusPtr)
-	{
-		_eventBusPtr = eventBusPtr;
-	}
 
 	void ClearAll();
 
@@ -127,11 +125,12 @@ private:
 	std::unordered_map<std::string, std::set<Entity>> _entitiesPerGroup;
 	std::unordered_map<int, std::string> _groupPerEntity;
 
+	// Instead of just freeIds, we track next version per slot
+	// [Index] => [EntityId]
+	std::vector<int> _entityVersions;
+
 	// Deque of free ids that were previously removed
 	std::deque<int> _freeIds;
-
-	// Reference to event bus
-	EventBus* _eventBusPtr;
 };
 
 #include "Registry.inl"

@@ -7,12 +7,13 @@ class Registry;
 class Entity
 {
 public:
-	Entity() : _id(-1), _registry(nullptr) {}
-	Entity(int id, Registry* registry);
+	Entity() : _id(-1), _version(0), _registry(nullptr) {}
+	Entity(int id, int version, Registry* registry);
 	Entity(const Entity& entity) = default;
 
 	void Kill();
 	int GetId() const;
+	uint32_t GetVersion() const;
 
 	// Manage entity tags and groups
 	void Tag(const std::string& tag);
@@ -23,8 +24,8 @@ public:
 	Entity& operator=(const Entity& other) = default;
 
 	// Operator overloading for entity objects
-	bool operator ==(const Entity& other) const { return _id == other._id; }
-	bool operator !=(const Entity& other) const { return _id != other._id; }
+	bool operator ==(const Entity& other) const { return _id == other._id && _version == other._version; }
+	bool operator !=(const Entity& other) const { return _id != other._id && _version != other._version; }
 	bool operator >(const Entity& other) const { return _id > other._id; }
 	bool operator <(const Entity& other) const { return _id < other._id; }
 
@@ -45,6 +46,7 @@ private:
 	Registry* _registry;
 
 	int _id;
+	uint32_t _version;
 };
 
 namespace std
@@ -54,7 +56,7 @@ namespace std
 	{
 		std::size_t operator()(const Entity& entity) const noexcept
 		{
-			return std::hash<int>()(entity.GetId());
+			return std::hash<int>()(entity.GetId()) ^ (std::hash<uint32_t>()(entity.GetVersion()) << 1);
 		}
 	};
 }

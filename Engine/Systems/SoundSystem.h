@@ -17,7 +17,7 @@ struct PlayingSound
     SDL_AudioStream* stream = nullptr;
     const SoundData* soundData = nullptr;
     bool loop = false;
-    int ownerEntityId = -1;
+    Entity ownerEntity;
 };
 
 class SoundSystem : public System
@@ -41,10 +41,9 @@ public:
     void SubscribeToEvents(EventBus& eventBus)
     {
         eventBus.SubscribeToEvent(this, &SoundSystem::OnPlaySound);
-        eventBus.SubscribeToEvent(this, &SoundSystem::OnKillEntity);
     }
 
-    void Update()
+    void Update(Registry& registry)
     {
         for (std::shared_ptr<Archetype>& archetype : AccessArchetypes())
         {
@@ -54,20 +53,20 @@ public:
             for (Entity& entity : entities)
             {
                 SoundComponent& sound = entity.GetComponent<SoundComponent>();
-                if (!sound.isInitialized && !sound.assetId.empty())
+                if (!sound.assetId.empty())
                 {
-                    PlaySound(sound.assetId, sound.loop, sound.volume, entity.GetId());
+                    PlaySound(sound.assetId, sound.loop, sound.volume, entity);
                     // one-shot trigger
-                    sound.isInitialized = true;
+                    sound.assetId.clear();
                 }
             }
         }
 
         // Clean up finished non-looping sounds or refill looped ones
-        UpdateSounds();
+        UpdateSounds(registry);
     }
 
-    void PlaySound(const std::string& assetId, bool loop = false, float volume = 1.0f, int ownerEntityId = -1)
+    void PlaySound(const std::string& assetId, bool loop = false, float volume = 1.0f, Entity ownerEntity = Entity())
     {
         SoundData* data = AssetStore::Get().GetSound(assetId);
         if (!data || !_device)
@@ -91,7 +90,7 @@ public:
         playingSound.stream = stream;
         playingSound.soundData = data;
         playingSound.loop = loop;
-        playingSound.ownerEntityId = ownerEntityId;
+        playingSound.ownerEntity = ownerEntity;
 
         if (!loop)
         {
@@ -114,33 +113,26 @@ private:
         PlaySound(event.assetId, event.loop, event.volume);
     }
 
-    void OnKillEntity(KillEntityEvent& event)
+    void UpdateSounds(Registry& registry)
     {
-        // RemoveSwapLast all sounds belonging to the killed entity
-        auto removeBegin = std::remove_if(_playingSounds.begin(), _playingSounds.end(),
-            [&](const PlayingSound& ps)
-            {
-                if (ps.ownerEntityId == event.entityId)
-                {
-                    if (ps.stream)
-                    {
-                        SDL_DestroyAudioStream(ps.stream);
-                    }
-                    // Mark for removal
-                    return true;
-                }
-                return false;
-            });
-
-        // Actually erase the marked elements
-        _playingSounds.erase(removeBegin, _playingSounds.end());
-    }
-
-    void UpdateSounds()
-    {
-        for (auto it = _playingSounds.begin(); it != _playingSounds.end(); )
+        auto it = _playingSounds.begin();
+        while (it != _playingSounds.end())
         {
-            // RemoveSwapLast 
+            //// Check, if given sound still has owner and this sound is a loop
+            if (!registry.IsEntityAlive(it->ownerEntity) && it->loop)
+            {
+                if (it->stream)
+                {
+                    SDL_DestroyAudioStream(it->stream);
+                }
+
+                it = _playingSounds.erase(it);
+                continue;
+            }
+
+            //// Check one-time sounds and loops
+
+            // One-time sound
             if (SDL_GetAudioStreamAvailable(it->stream) == 0 && !it->loop)
             {
                 SDL_DestroyAudioStream(it->stream);
@@ -148,6 +140,7 @@ private:
             }
             else
             {
+                // Loop
                 // Refill looping sounds when they run out
                 if (SDL_GetAudioStreamAvailable(it->stream) == 0 && it->loop)
                 {
