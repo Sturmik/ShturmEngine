@@ -5,7 +5,6 @@
 #include "AssetStore/AssetStore.h"
 #include "EventBus/EventBus.h"
 #include "Events/PlaySoundEvent.h"
-#include "Events/KillEntityEvent.h"
 
 #include <SDL3/SDL.h>
 #include <vector>

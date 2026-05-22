@@ -10,9 +10,6 @@ struct IColumn
 	virtual void RemoveSwapLast(uint32_t index) = 0;
 
 	virtual void CopyFrom(IColumn* source, uint32_t srcIndex, uint32_t dstIndex) = 0;
-
-	// Allows outter system to identify component type
-	virtual std::unique_ptr<IColumn> CloneEmpty() const = 0;
 };
 
 template<typename T>
@@ -45,10 +42,5 @@ struct Column : public IColumn
 		}
 
 		data[destinationIndex] = sourceColumn->data[sourceIndex];
-	}
-
-	std::unique_ptr<IColumn> CloneEmpty() const override
-	{
-		return std::make_unique<Column<T>>();
 	}
 };
