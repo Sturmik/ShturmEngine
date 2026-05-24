@@ -44,22 +44,17 @@ public:
 
     void Update(Registry& registry)
     {
-        for (std::shared_ptr<Archetype>& archetype : AccessArchetypes())
+        ForEach<SoundComponent>([&](Entity entity,
+            SoundComponent& sound)
         {
-            std::vector<Entity>& entities = archetype->entities;
-
-            // Handle entity-attached sounds (e.g. looping engine sound)
-            for (Entity& entity : entities)
+            // Start asset sound
+            if (!sound.assetId.empty())
             {
-                SoundComponent& sound = entity.GetComponent<SoundComponent>();
-                if (!sound.assetId.empty())
-                {
-                    PlaySound(sound.assetId, sound.loop, sound.volume, entity);
-                    // one-shot trigger
-                    sound.assetId.clear();
-                }
+                PlaySound(sound.assetId, sound.loop, sound.volume, entity);
+                // one-shot trigger
+                sound.assetId.clear();
             }
-        }
+        });
 
         // Clean up finished non-looping sounds or refill looped ones
         UpdateSounds(registry);

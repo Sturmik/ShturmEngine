@@ -15,20 +15,10 @@ public:
 
 	void Update(float deltaTime)
 	{
-		for (std::shared_ptr<Archetype>& archetype : AccessArchetypes())
+		ForEach<TransformComponent, RigidBodyComponent>([&](Entity entity, TransformComponent& transform, const RigidBodyComponent& rigidBody)
 		{
-			std::vector<Entity>& entities = archetype->entities;
-
-			// Loop all entities that the system is interested in
-			for (const Entity& entity : entities)
-			{
-				// Update entity position based on its velocity every frame of the game loop
-				TransformComponent& transform = entity.GetComponent<TransformComponent>();
-				const RigidBodyComponent& rigidBody = entity.GetComponent<RigidBodyComponent>();
- 
-				transform.position.x += rigidBody.velocity.x * deltaTime;
-				transform.position.y += rigidBody.velocity.y * deltaTime;
-			}
-		}
+			transform.position.x += rigidBody.velocity.x * deltaTime;
+			transform.position.y += rigidBody.velocity.y * deltaTime;
+		});
 	}
 };

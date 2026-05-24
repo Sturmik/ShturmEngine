@@ -19,33 +19,25 @@ public:
 
 	void Update(SDL_FRect& camera, glm::vec2 mapSize)
 	{
-		for (std::shared_ptr<Archetype>& archetype : AccessArchetypes())
+		ForEach<TransformComponent>([&](Entity entity, const TransformComponent& transform)
 		{
-			std::vector<Entity>& entities = archetype->entities;
-
-			// Loop all entities that the system is interested in
-			for (Entity& entity : entities)
+			if (transform.position.x + (camera.w / 2) < mapSize.x)
 			{
-				const TransformComponent& transform = entity.GetComponent<TransformComponent>();
-
-				if (transform.position.x + (camera.w / 2) < mapSize.x)
-				{
-					camera.x = transform.position.x - (camera.w / 2);
-				}
-
-				if (transform.position.y + (camera.h / 2) < mapSize.y)
-				{
-					camera.y = transform.position.y - (camera.h / 2);
-				}
-
-				// Keep camera rectangle view inside the screen limits
-				camera.x = camera.x < 0 ? 0 : camera.x;
-				camera.y = camera.y < 0 ? 0 : camera.y;
-				float cameraBoundariesW = mapSize.x - camera.w / 2;
-				float cameraBoundariesH = mapSize.y - camera.h / 2;
-				camera.x = camera.x > cameraBoundariesW ? cameraBoundariesW : camera.x;
-				camera.y = camera.y > cameraBoundariesH ? cameraBoundariesH : camera.y;
+				camera.x = transform.position.x - (camera.w / 2);
 			}
-		}
+
+			if (transform.position.y + (camera.h / 2) < mapSize.y)
+			{
+				camera.y = transform.position.y - (camera.h / 2);
+			}
+
+			// Keep camera rectangle view inside the screen limits
+			camera.x = camera.x < 0 ? 0 : camera.x;
+			camera.y = camera.y < 0 ? 0 : camera.y;
+			float cameraBoundariesW = mapSize.x - camera.w / 2;
+			float cameraBoundariesH = mapSize.y - camera.h / 2;
+			camera.x = camera.x > cameraBoundariesW ? cameraBoundariesW : camera.x;
+			camera.y = camera.y > cameraBoundariesH ? cameraBoundariesH : camera.y;
+		});
 	}
 };

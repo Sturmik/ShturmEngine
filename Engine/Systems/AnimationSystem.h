@@ -16,20 +16,12 @@ public:
 
 	void Update()
 	{
-		for (std::shared_ptr<Archetype>& archetype : AccessArchetypes())
+		ForEach<SpriteComponent, AnimationComponent>([&](Entity entity, SpriteComponent& sprite, AnimationComponent& animation)
 		{
-			std::vector<Entity>& entities = archetype->entities;
+			animation.currentFrame = ((SDL_GetTicks() - animation.startTimeInMs) *
+			animation.frameRateSpeedPerSecond / 1000) % animation.numFrames;
 
-			for (const Entity& entity : entities)
-			{
-				SpriteComponent& sprite = entity.GetComponent<SpriteComponent>();
-				AnimationComponent& animation = entity.GetComponent<AnimationComponent>();
-
-				animation.currentFrame = ((SDL_GetTicks() - animation.startTimeInMs) *
-				animation.frameRateSpeedPerSecond / 1000) % animation.numFrames;
-
-				sprite.srcRect.x = animation.currentFrame * sprite.width;
-			}
-		}
+			sprite.srcRect.x = animation.currentFrame * sprite.width;
+		});
 	}
 };

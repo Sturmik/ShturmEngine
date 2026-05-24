@@ -17,31 +17,21 @@ public:
 
 	void Update(SDL_Renderer& renderer, SDL_FRect& camera)
 	{
-		for (std::shared_ptr<Archetype>& archetype : AccessArchetypes())
+		ForEach<TransformComponent, BoxColliderComponent>([&](Entity entity, const TransformComponent& transform, const BoxColliderComponent& boxCollider)
 		{
-			std::vector<Entity>& entities = archetype->entities;
+			// Set drawing color. Red in case of collision. Green in case of it's absence
+			SDL_SetRenderDrawColor(&renderer, (boxCollider.isColliding ? 255 : 0), (boxCollider.isColliding ? 0 : 255), 0, 255);
 
-			// Loop all entities that the system is interested in
-			for (Entity& entity : entities)
-			{
-				// Update entity position based on its velocity every frame of the game loop
-				const TransformComponent& transform = entity.GetComponent<TransformComponent>();
-				const BoxColliderComponent& boxCollider = entity.GetComponent<BoxColliderComponent>();
+			// Set the destination rectangle with the x, y position to be rendered
+			SDL_FRect rect = {
+				transform.position.x + boxCollider.offset.x - (transform.isFixed ? 0 : camera.x),
+				transform.position.y + boxCollider.offset.y - (transform.isFixed ? 0 : camera.y),
+				(boxCollider.offset.x + boxCollider.width) * transform.scale.x,
+				(boxCollider.offset.y + boxCollider.height) * transform.scale.y
+			};
 
-				// Set drawing color. Red in case of collision. Green in case of it's absence
-				SDL_SetRenderDrawColor(&renderer, (boxCollider.isColliding ? 255 : 0), (boxCollider.isColliding ? 0 : 255), 0, 255);
-
-				// Set the destination rectangle with the x, y position to be rendered
-				SDL_FRect rect = {
-					transform.position.x + boxCollider.offset.x - (transform.isFixed ? 0 : camera.x),
-					transform.position.y + boxCollider.offset.y - (transform.isFixed ? 0 : camera.y),
-					(boxCollider.offset.x + boxCollider.width) * transform.scale.x,
-					(boxCollider.offset.y + boxCollider.height) * transform.scale.y
-				};
-
-				// Draw rectangle
-				SDL_RenderRect(&renderer, &rect);
-			}
-		}
+			// Draw rectangle
+			SDL_RenderRect(&renderer, &rect);
+		});
 	}
 };

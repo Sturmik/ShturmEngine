@@ -13,21 +13,13 @@ public:
 
 	void Update()
 	{
-		for (std::shared_ptr<Archetype>& archetype : AccessArchetypes())
+		ForEach<LifecycleComponent>([&](Entity entity, const LifecycleComponent& lifecycle)
 		{
-			std::vector<Entity>& entities = archetype->entities;
-
-			// Loop all entities that the system is interested in
-			for (Entity& entity : entities)
+			// Kill object after it reaches it's duration limit
+			if (SDL_GetTicks() - lifecycle.startTimeInMs > lifecycle.durationInMs)
 			{
-				const LifecycleComponent& lifecycle = entity.GetComponent<LifecycleComponent>();
-
-				// Kill object after it reaches it's duration limit
-				if (SDL_GetTicks() - lifecycle.startTimeInMs > lifecycle.durationInMs)
-				{
-					entity.Kill();
-				}
+				entity.Kill();
 			}
-		}
+		});
 	}
 };

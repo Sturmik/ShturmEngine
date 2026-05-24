@@ -19,48 +19,41 @@ public:
 
 	void Update(SDL_Renderer& renderer, AssetStore& assetStore, SDL_FRect& camera)
 	{
-		for (std::shared_ptr<Archetype>& archetype : AccessArchetypes())
+		ForEach<TransformComponent, TextLabelComponent>([&](Entity entity,
+			const TransformComponent& transform,
+			const TextLabelComponent& textLabel)
 		{
-			std::vector<Entity>& entities = archetype->entities;
-
-			// Loop all entities that the system is interested in
-			for (Entity& entity : entities)
-			{
-				const TransformComponent& transform = entity.GetComponent<TransformComponent>();
-				const TextLabelComponent& textLabel = entity.GetComponent<TextLabelComponent>();
-
-				SDL_Surface* surface = TTF_RenderText_Blended(assetStore.GetFont(textLabel.assetId), 
-				textLabel.text.c_str(), 
+			SDL_Surface* surface = TTF_RenderText_Blended(assetStore.GetFont(textLabel.assetId),
+				textLabel.text.c_str(),
 				textLabel.text.size(),
 				textLabel.color);
 
-				SDL_Texture* texture = SDL_CreateTextureFromSurface(&renderer, surface);
-				SDL_DestroySurface(surface);
+			SDL_Texture* texture = SDL_CreateTextureFromSurface(&renderer, surface);
+			SDL_DestroySurface(surface);
 
-				float labelWidth = 0;
-				float labelHeight = 0;
-				SDL_GetTextureSize(texture, &labelWidth, &labelHeight);
+			float labelWidth = 0;
+			float labelHeight = 0;
+			SDL_GetTextureSize(texture, &labelWidth, &labelHeight);
 
-				// Set the destination rectangle with the x, y position to be rendered
-				SDL_FRect dstRect = {
-					transform.position.x - (transform.isFixed ? 0 : camera.x),
-					transform.position.y - (transform.isFixed ? 0 : camera.y),
-					labelWidth,
-					labelHeight
-				};
+			// Set the destination rectangle with the x, y position to be rendered
+			SDL_FRect dstRect = {
+				transform.position.x - (transform.isFixed ? 0 : camera.x),
+				transform.position.y - (transform.isFixed ? 0 : camera.y),
+				labelWidth,
+				labelHeight
+			};
 
-				// Draw the PNG texture
-				SDL_RenderTextureRotated(&renderer,
-					texture,
-					NULL,
-					&dstRect,
-					transform.rotation,
-					NULL,
-					SDL_FLIP_NONE);
+			// Draw the PNG texture
+			SDL_RenderTextureRotated(&renderer,
+				texture,
+				NULL,
+				&dstRect,
+				transform.rotation,
+				NULL,
+				SDL_FLIP_NONE);
 
-				// Destroy texture
-				SDL_DestroyTexture(texture);
-			}
-		}
+			// Destroy texture
+			SDL_DestroyTexture(texture);
+		});
 	}
 };

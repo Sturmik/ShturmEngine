@@ -24,42 +24,36 @@ public:
 
 	void OnKeyPressed(KeyPressedEvent& event)
 	{
-		for (std::shared_ptr<Archetype>& archetype : AccessArchetypes())
+		ForEach<KeyboardControlledComponent, SpriteComponent, RigidBodyComponent>([&](Entity entity, 
+		const KeyboardControlledComponent& keyboardControl,
+		SpriteComponent& sprite,
+		RigidBodyComponent& rigidbody)
 		{
-			std::vector<Entity>& entities = archetype->entities;
-
-			for (Entity& entity : entities)
+			switch (event.keyScancode)
 			{
-				KeyboardControlledComponent& keyboardControl = entity.GetComponent<KeyboardControlledComponent>();
-				SpriteComponent& sprite = entity.GetComponent<SpriteComponent>();
-				RigidBodyComponent& rigidbody = entity.GetComponent<RigidBodyComponent>();
+			case SDL_SCANCODE_UP:
+				rigidbody.velocity = keyboardControl.upVelocity;
+				sprite.srcRect.y = sprite.height * 0; // This is horrible and static. This should and must be implemented in more generic and better way
+				break;
 
-				switch (event.keyScancode)
-				{
-					case SDL_SCANCODE_UP:
-						rigidbody.velocity = keyboardControl.upVelocity;
-						sprite.srcRect.y = sprite.height * 0; // This is horrible and static. This should and must be implemented in more generic and better way
-						break;
-				
-					case SDL_SCANCODE_RIGHT:
-						rigidbody.velocity = keyboardControl.rightVelocity;
-						sprite.srcRect.y = sprite.height * 1; // This is horrible and static. This should and must be implemented in more generic and better way
-						break;
+			case SDL_SCANCODE_RIGHT:
+				rigidbody.velocity = keyboardControl.rightVelocity;
+				sprite.srcRect.y = sprite.height * 1; // This is horrible and static. This should and must be implemented in more generic and better way
+				break;
 
-					case SDL_SCANCODE_DOWN:
-						rigidbody.velocity = keyboardControl.downVelocity;
-						sprite.srcRect.y = sprite.height * 2; // This is horrible and static. This should and must be implemented in more generic and better way
-						break;
-				
-					case SDL_SCANCODE_LEFT:
-						rigidbody.velocity = keyboardControl.leftVelocity;
-						sprite.srcRect.y = sprite.height * 3; // This is horrible and static. This should and must be implemented in more generic and better way
-						break;
+			case SDL_SCANCODE_DOWN:
+				rigidbody.velocity = keyboardControl.downVelocity;
+				sprite.srcRect.y = sprite.height * 2; // This is horrible and static. This should and must be implemented in more generic and better way
+				break;
 
-					default:
-					break;
-				}
+			case SDL_SCANCODE_LEFT:
+				rigidbody.velocity = keyboardControl.leftVelocity;
+				sprite.srcRect.y = sprite.height * 3; // This is horrible and static. This should and must be implemented in more generic and better way
+				break;
+
+			default:
+				break;
 			}
-		}
+		});
 	}
 };
