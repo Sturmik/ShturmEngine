@@ -7,6 +7,8 @@
 #include "EventBus/EventBus.h"
 #include "Events/CollisionEvent.h"
 
+#include <algorithm>
+
 class MovementSystem : public System
 {
 public:
@@ -71,22 +73,51 @@ public:
 
 	void Update(float deltaTime, glm::vec2 mapSize)
 	{
-		ForEach<TransformComponent, RigidBodyComponent>([&](Entity entity, TransformComponent& transform, const RigidBodyComponent& rigidBody)
+		ForEach<TransformComponent, RigidBodyComponent>([&](Entity entity, TransformComponent& transform, RigidBodyComponent& rigidBody)
 		{
+			// Update position based on velocity
 			transform.position.x += rigidBody.velocity.x * deltaTime;
 			transform.position.y += rigidBody.velocity.y * deltaTime;
 
+			// Check, if entity is out of bounds
+			float bottomRightPositionX = transform.position.x;
+			float bottomRightPositionY = transform.position.y;
+			float possibleMarginX = 0.0f;
+			float possibleMarginY = 0.0f;
+
+			// Assume, that our position is on the top-left corner of the srite, therefore we need to account for that
+			if (entity.HasComponent<SpriteComponent>())
+			{
+				SpriteComponent& sprite = entity.GetComponent<SpriteComponent>();
+
+				possibleMarginX = sprite.srcRect.w * transform.scale.x;
+				possibleMarginY = sprite.srcRect.h * transform.scale.y;
+
+				bottomRightPositionX += possibleMarginX;
+				bottomRightPositionY += possibleMarginY;
+			}
+
 			bool isEntityOutsideMap = {
-				transform.position.x < 0 ||
-				transform.position.x > mapSize.x ||
-				transform.position.y < 0 ||
-				transform.position.y > mapSize.y
+				transform.position.x < 0.0f ||
+				bottomRightPositionX > mapSize.x ||
+				transform.position.y < 0.0f ||
+				bottomRightPositionY > mapSize.y
 			};
 
 			// Kill all entities that move outside the map boundaries
 			if (isEntityOutsideMap && !entity.HasTag("player"))
 			{
+				LOG_INFO("Entity %d out of bounds is destroyed", entity.GetId());
 				entity.Kill();
+			}
+
+			// Stop the player and return it to the map boundaries
+			if (isEntityOutsideMap && entity.HasTag("player"))
+			{
+				transform.position.x = std::clamp(transform.position.x, 0.0f, mapSize.x - possibleMarginX);
+				transform.position.y = std::clamp(transform.position.y, 0.0f, mapSize.y - possibleMarginY);
+
+				rigidBody.velocity.x = rigidBody.velocity.y = 0.0f;
 			}
 		});
 	}

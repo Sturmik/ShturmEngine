@@ -244,8 +244,8 @@ void Game::LoadLevel(int level)
         file.close();
 
         // Update map width and height variables
-        _mapWidth = max_num_of_col * TILE_WIDTH * TILE_SCALE;
-        _mapHeight = row * TILE_HEIGHT * TILE_SCALE;
+        _mapWidth = (max_num_of_col - 1) * TILE_WIDTH * TILE_SCALE + (TILE_WIDTH * TILE_SCALE);
+        _mapHeight = (row - 1) * TILE_HEIGHT * TILE_SCALE + (TILE_HEIGHT * TILE_SCALE);
     }
     else 
     {
@@ -268,7 +268,8 @@ void Game::LoadLevel(int level)
     chopper.AddComponent<SpriteComponent>( "chopper-image", 32, 32, 2);
     chopper.AddComponent<BoxColliderComponent>(chopper.GetComponent<SpriteComponent>().width, chopper.GetComponent<SpriteComponent>().height);
     chopper.AddComponent<AnimationComponent>(2, 15, true);
-    chopper.AddComponent<KeyboardControlledComponent>(glm::vec2(0, -120), glm::vec2(120, 0), glm::vec2(0, 120), glm::vec2(-120, 0));
+    const float chopperSpead = 200;
+    chopper.AddComponent<KeyboardControlledComponent>(glm::vec2(0, -chopperSpead), glm::vec2(chopperSpead, 0), glm::vec2(0, chopperSpead), glm::vec2(-chopperSpead, 0));
     chopper.AddComponent<CameraFollowComponent>();
     chopper.AddComponent<HealthComponent>(100);
     chopper.AddComponent<ProjectileEmitterComponent>(glm::vec2(150.0, 150.0), 0, 5000, 10, true, "bullet-image", "gunshot-sound");
