@@ -145,6 +145,7 @@ void Game::LoadLevel(int level)
     _registry.GetSystem<SoundSystem>().Initialize(_audioDevice);
 
     // Perform the subscription of the events for all systems
+    _registry.GetSystem<MovementSystem>().SubscribeToEvents(_eventBus);
     _registry.GetSystem<DamageSystem>().SubscribeToEvents(_eventBus);
     _registry.GetSystem<KeyboardControlSystem>().SubscribeToEvents(_eventBus);
     _registry.GetSystem<ProjectileEmitSystem>().SubscribeToEvents(_eventBus);
@@ -154,6 +155,7 @@ void Game::LoadLevel(int level)
     // Textures
     AssetStore::Get().AddTexture(_renderer, "tank-image", "./Assets/Images/tank-panther-right.png");
     AssetStore::Get().AddTexture(_renderer, "truck-image", "./Assets/Images/truck-ford-right.png");
+    AssetStore::Get().AddTexture(_renderer, "tree-image", "./Assets/Images/tree.png");
     AssetStore::Get().AddTexture(_renderer, "chopper-image", "./Assets/Images/chopper-spritesheet.png");
     AssetStore::Get().AddTexture(_renderer, "radar-image", "./Assets/Images/radar.png");
     AssetStore::Get().AddTexture(_renderer, "bullet-image", "./Assets/Images/bullet.png");
@@ -286,12 +288,24 @@ void Game::LoadLevel(int level)
     Entity truck = _registry.CreateEntity();
     truck.Group("enemies");
     truck.AddComponent<TransformComponent>(glm::vec2(300, 750), glm::vec2(2.0, 2.0), 0.0);
-    truck.AddComponent<RigidBodyComponent>(glm::vec2(0, 0));
+    truck.AddComponent<RigidBodyComponent>(glm::vec2(90, 0));
     truck.AddComponent<SpriteComponent>(AssetStore::Get(), "truck-image", 1);
     truck.AddComponent<BoxColliderComponent>(truck.GetComponent<SpriteComponent>().width, truck.GetComponent<SpriteComponent>().height);
-    truck.AddComponent<ProjectileEmitterComponent>(glm::vec2(0.0, -100.0), 1000, 5000, 10, false, "bullet-image");
+    truck.AddComponent<ProjectileEmitterComponent>(glm::vec2(0.0, -100.0), 200, 8000, 10, false, "bullet-image");
     truck.AddComponent<HealthComponent>(100);
     truck.AddComponent<HealthBarComponent>("pico-font-10", glm::vec2(70, 0), glm::vec2(30, 10), glm::vec2(70, 20));
+
+    Entity treeA = _registry.CreateEntity();
+    treeA.Group("obstacles");
+    treeA.AddComponent<TransformComponent>(glm::vec2(200, 700), glm::vec2(2.0, 2.0), 0.0);
+    treeA.AddComponent<SpriteComponent>(AssetStore::Get(), "tree-image", 1);
+    treeA.AddComponent<BoxColliderComponent>(treeA.GetComponent<SpriteComponent>().width, treeA.GetComponent<SpriteComponent>().height);
+
+    Entity treeB = _registry.CreateEntity();
+    treeB.Group("obstacles");
+    treeB.AddComponent<TransformComponent>(glm::vec2(600, 700), glm::vec2(2.0, 2.0), 0.0);
+    treeB.AddComponent<SpriteComponent>(AssetStore::Get(), "tree-image", 1);
+    treeB.AddComponent<BoxColliderComponent>(treeB.GetComponent<SpriteComponent>().width, treeB.GetComponent<SpriteComponent>().height);
 
     Entity label = _registry.CreateEntity();
     label.AddComponent<TransformComponent>(glm::vec2(400, 650), glm::vec2(1.0, 1.0), 0.0);
