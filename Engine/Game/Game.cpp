@@ -387,7 +387,7 @@ void Game::Update()
 
     // Update systems
     _registry.GetSystem<AnimationSystem>().Update();
-    _registry.GetSystem<MovementSystem>().Update(deltaTime);
+    _registry.GetSystem<MovementSystem>().Update(deltaTime, GetMapSize());
     _registry.GetSystem<CollisionSystem>().Update(_eventBus);
     _registry.GetSystem<CameraMovementSystem>().Update(_camera, GetMapSize());
     _registry.GetSystem<ProjectileEmitSystem>().Update( _registry);
