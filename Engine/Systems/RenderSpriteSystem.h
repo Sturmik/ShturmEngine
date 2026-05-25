@@ -37,6 +37,18 @@ public:
 			const TransformComponent& transform = entity.GetComponent<TransformComponent>();
 			const SpriteComponent& sprite = entity.GetComponent<SpriteComponent>();
 
+			// Bypass rendering entities, if they are outside the camera view
+			bool isEntityOutsideCameraView = {
+				transform.position.x + (sprite.width * transform.scale.x) < camera.x ||
+				transform.position.x > camera.x + camera.w ||
+				transform.position.y + (sprite.height * transform.scale.y) < camera.y ||
+				transform.position.y > camera.y + camera.h
+			};
+			if (isEntityOutsideCameraView && !transform.isFixed)
+			{
+				continue;
+			}
+
 			// Set the source rectangle of our original sprite texture
 			SDL_FRect srcRect = sprite.srcRect;
 
