@@ -8,6 +8,8 @@
 
 #include <glm/glm.hpp>
 
+#include <sol/sol.hpp>
+
 const int FPS = 60;
 const int MILLISECONDS_PER_FRAME = 1000 / FPS;
 
@@ -36,6 +38,8 @@ private:
 	SDL_Window* _window;
 	SDL_Renderer* _renderer;
 	SDL_FRect _camera;
+
+	sol::state _luaState;
 
 	float _mapWidth;
 	float _mapHeight;

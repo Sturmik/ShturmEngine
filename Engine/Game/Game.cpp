@@ -153,7 +153,8 @@ void Game::Setup()
     _registry.GetSystem<SoundSystem>().SubscribeToEvents(_eventBus);
 
     LevelLoader levelLoader;
-    levelLoader.LoadLevel(_registry, _window, _renderer, 0, _mapWidth, _mapHeight);
+    _luaState.open_libraries(sol::lib::base, sol::lib::math);
+    levelLoader.LoadLevel(_luaState, _registry, _window, _renderer, 1, _mapWidth, _mapHeight);
 }
 
 void Game::ProcessInput(SDL_Event& event)

@@ -1,16 +1,16 @@
 -- Define a table with the values of the first level
-Level = {
+level = {
     ----------------------------------------------------
     -- Table to define the list of assets
     ----------------------------------------------------
     assets = {
         [0] =
         { type = "texture", id = "tilemap-texture", file = "./Assets/Tilemaps/jungle.png" },
-        { type = "texture", id = "chopper-texture", file = "./Assets/Images/chopper-green-spritesheet.png" },
+        { type = "texture", id = "chopper-texture", file = "./Assets/Images/chopper-spritesheet.png" },
         { type = "texture", id = "tank-texture",    file = "./Assets/Images/tank-tiger-up.png" },
         { type = "texture", id = "bullet-texture",  file = "./Assets/images/bullet.png" },
         { type = "font"   , id = "pico8-font-5",    file = "./Assets/Fonts/pico8.ttf", font_size = 5 },
-        { type = "font"   , id = "pico8-font-10",   file = "./Assets/Fonts/pico8.ttf", font_size = 10 }
+        { type = "font"   , id = "pico8-font-10",   file = "./Assets/Fonts/pico8.ttf", font_size = 10 },
         { type = "font"   , id = "charriot-font",   file = "./Assets/Fonts/charriot.ttf", font_size = 16 },
         { type = "font"   , id = "arial-font",      file = "./Assets/Fonts/arial.ttf", font_size = 16 },
         { type = "sound"  , id = "helicopter-sound",file = "./Assets/Sounds/helicopter.wav", font_size = 16 },
@@ -26,7 +26,7 @@ Level = {
         texture_asset_id = "tilemap-texture",
         num_rows = 3,
         num_cols = 10,
-        scale = 3.0
+        scale = 2.0
     },
 
     ----------------------------------------------------
@@ -42,6 +42,7 @@ Level = {
                     position = { x = 242, y = 110 },
                     scale = { x = 1.0, y = 1.0 },
                     rotation = 0.0, -- degrees
+                    fixed = false
                 },
                 rigidbody = {
                     velocity = { x = 0.0, y = 0.0 }
@@ -51,7 +52,6 @@ Level = {
                     width = 32,
                     height = 32,
                     z_index = 4,
-                    fixed = false,
                     src_rect_x = 0,
                     src_rect_y = 0
                 },
@@ -67,12 +67,20 @@ Level = {
                 health = {
                     health_percentage = 100
                 },
+                health_bar = {
+                    texture_asset_id = "pico8-font-10",
+                    text_offset = { x = 50, y = 0 },
+                    health_bar_size = { x = 10, y = 5 },
+                    health_bar_offset = { x = 50, y = 20 }
+                },
                 projectile_emitter = {
                     projectile_velocity = { x = 200, y = 200 },
                     projectile_duration = 10, -- seconds
                     repeat_frequency = 0, -- seconds
                     hit_percentage_damage = 10,
-                    friendly = true
+                    friendly = true,
+                    texture_asset_id = "bullet-texture",
+                    sound_asset_id = "gunshot-sound"
                 },
                 keyboard_controller = {
                     up_velocity = { x = 0, y = -50 },
@@ -82,7 +90,12 @@ Level = {
                 },
                 camera_follow = {
                     follow = true
-                }
+                },
+                sound = {
+                    sound_asset_id =  "helicopter-sound", 
+                    loop = true, 
+                    volume = 0.1
+                },
             }
         },
         {
@@ -96,8 +109,6 @@ Level = {
                 },
                 sprite = {
                     texture_asset_id = "tank-texture",
-                    width = 32,
-                    height = 32,
                     z_index = 2
                 },
                 boxcollider = {
@@ -108,12 +119,30 @@ Level = {
                 health = {
                     health_percentage = 100
                 },
+                health_bar = {
+                    texture_asset_id = "pico8-font-10",
+                    text_offset = { x = 50, y = 0 },
+                    health_bar_size = { x = 10, y = 5 },
+                    health_bar_offset = { x = 50, y = 20 }
+                },
                 projectile_emitter = {
                     projectile_velocity = { x = 100, y = 0 },
                     projectile_duration = 2, -- seconds
                     repeat_frequency = 1, -- seconds
                     hit_percentage_damage = 20,
-                    friendly = false
+                    friendly = false,
+                    texture_asset_id = "bullet-texture",
+                    sound_asset_id = "gunshot-sound"
+                }
+            }
+        },
+        {
+            -- Soundtrack
+            components = {
+                sound = {
+                    sound_asset_id = "SFU-music", 
+                    loop = true, 
+                    volume = 0.4
                 }
             }
         }
