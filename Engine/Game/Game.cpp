@@ -142,6 +142,9 @@ void Game::Setup()
     _registry.AddSystem<RenderHealthBarSystem>();
     _registry.AddSystem<RenderImGuiSystem>();
     _registry.AddSystem<ScriptSystem>();
+    
+    // Create the bindings between C++ and Lua
+    _registry.GetSystem<ScriptSystem>().CreateLuaBindings(_luaState);
 
     // Audio system is a complex one and requires additional initialization
     _registry.AddSystem<SoundSystem>();
@@ -245,7 +248,7 @@ void Game::Update()
     _registry.GetSystem<ProjectileEmitSystem>().Update( _registry);
     _registry.GetSystem<LifecycleSystem>().Update();
     _registry.GetSystem<SoundSystem>().Update(_registry);
-    _registry.GetSystem<ScriptSystem>().Update();
+    _registry.GetSystem<ScriptSystem>().Update(deltaTime, SDL_GetTicks());
 }
 
 void Game::Render()
