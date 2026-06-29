@@ -159,7 +159,7 @@ void Game::Setup()
 
     LevelLoader levelLoader;
     _luaState.open_libraries(sol::lib::base, sol::lib::os, sol::lib::math);
-    levelLoader.LoadLevel(_luaState, _registry, _window, _renderer, 1, _mapWidth, _mapHeight);
+    levelLoader.LoadLevel(_luaState, _registry, _window, _renderer, 2, _mapWidth, _mapHeight);
 }
 
 void Game::ProcessInput(SDL_Event& event)

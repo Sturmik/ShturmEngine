@@ -99,7 +99,7 @@ void LevelLoader::LoadLevel(sol::state& luaState, Registry& registry, SDL_Window
     int mapNumCols = map["texture_num_cols"];
     double mapScale = map["scale"];
     // Open tilemap data (grid of tile indices)
-    std::ifstream file("./Assets/Tilemaps/jungle.map");
+    std::ifstream file(mapFilePath);
     if (file.is_open())
     {
         // Query atlas (tileset) dimensions
@@ -324,8 +324,8 @@ void LevelLoader::LoadLevel(sol::state& luaState, Registry& registry, SDL_Window
                         static_cast<int>(entity["components"]["projectile_emitter"]["projectile_duration"].get_or(10)) * 1000,
                         static_cast<int>(entity["components"]["projectile_emitter"]["hit_percentage_damage"].get_or(10)),
                         entity["components"]["projectile_emitter"]["friendly"].get_or(false),
-                        entity["components"]["projectile_emitter"]["texture_asset_id"],
-                        entity["components"]["projectile_emitter"]["sound_asset_id"]
+                        entity["components"]["projectile_emitter"]["texture_asset_id"].get_or(std::string{}),
+                        entity["components"]["projectile_emitter"]["sound_asset_id"].get_or(std::string{})
                     );
                 }
 
