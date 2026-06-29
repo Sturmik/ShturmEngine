@@ -153,7 +153,7 @@ void Game::Setup()
     _registry.GetSystem<SoundSystem>().SubscribeToEvents(_eventBus);
 
     LevelLoader levelLoader;
-    _luaState.open_libraries(sol::lib::base, sol::lib::math);
+    _luaState.open_libraries(sol::lib::base, sol::lib::os, sol::lib::math);
     levelLoader.LoadLevel(_luaState, _registry, _window, _renderer, 1, _mapWidth, _mapHeight);
 }
 
