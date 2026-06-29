@@ -101,6 +101,7 @@ level = {
         texture_asset_id = map_texture_asset_id,
         num_rows = 3,
         num_cols = 10,
+        tile_size = 32,
         scale = 2.0
     },
 
@@ -3069,7 +3070,6 @@ level = {
                 }
             }
         },
-        --[[
         {
             -- SU-27 fighter jet
             group = "enemies",
@@ -3117,8 +3117,8 @@ level = {
                 on_update_script = {
                     [0] =
                     function(entity, delta_time, ellapsed_time)
-                        -- print("Executing the SU-27 fighter jet Lua script!")
-
+                        print("Executing the SU-27 fighter jet Lua script!")
+                        --[[
                         -- this function makes the fighter jet move up and down the map shooting projectiles
                         local current_position_x, current_position_y = get_position(entity)
                         local current_velocity_x, current_velocity_y = get_velocity(entity)
@@ -3138,6 +3138,7 @@ level = {
                             set_rotation(entity, 180) -- point down
                             set_projectile_velocity(entity, 0, 200) -- shoot projectiles down
                         end
+                        --]]
                     end
                 }
             }
@@ -3189,16 +3190,20 @@ level = {
                 on_update_script = {
                     [0] =
                     function(entity, delta_time, ellapsed_time)
-                        -- print("Executing BF-109 Lua script!")
-
+                        print("Executing F-22 Lua script!")
+                        --[[
                         -- change the position of the the airplane to follow a sine wave movement
                         local new_x = ellapsed_time * 0.09
                         local new_y = 200 + (math.sin(ellapsed_time * 0.001) * 50)
                         set_position(entity, new_x, new_y) -- set the new position
+                        --]]
                     end
                 }
             }
         }
-        --]]
     }
 }
+
+-- Define some useful global variables
+map_width = level.tilemap.num_cols * level.tilemap.tile_size * level.tilemap.scale
+map_height = level.tilemap.num_rows * level.tilemap.tile_size * level.tilemap.scale

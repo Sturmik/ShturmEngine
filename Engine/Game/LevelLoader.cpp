@@ -17,6 +17,7 @@
 #include "Systems/RenderHealthBarSystem.h"
 #include "Systems/RenderImGuiSystem.h"
 #include "Systems/SoundSystem.h"
+#include "Systems/ScriptSystem.h"
 
 LevelLoader::LevelLoader()
 {
@@ -365,6 +366,14 @@ void LevelLoader::LoadLevel(sol::state& luaState, Registry& registry, SDL_Window
                         entity["components"]["sound"]["loop"].get_or(false),
                         entity["components"]["sound"]["volume"].get_or(0.5f)
                     );
+                }
+
+                // Script
+                sol::optional<sol::table> script = entity["components"]["on_update_script"];
+                if ( script != sol::nullopt )
+                {
+                    sol::function function = entity["components"]["on_update_script"][0];
+                    newEntity.AddComponent<ScriptComponent>(function);
                 }
             }
             i++;

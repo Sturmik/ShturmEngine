@@ -22,6 +22,7 @@
 #include "Systems/RenderHealthBarSystem.h"
 #include "Systems/RenderImGuiSystem.h"
 #include "Systems/SoundSystem.h"
+#include "Systems/ScriptSystem.h"
 
 #include "LevelLoader.h"
 
@@ -140,6 +141,7 @@ void Game::Setup()
     _registry.AddSystem<RenderTextSystem>();
     _registry.AddSystem<RenderHealthBarSystem>();
     _registry.AddSystem<RenderImGuiSystem>();
+    _registry.AddSystem<ScriptSystem>();
 
     // Audio system is a complex one and requires additional initialization
     _registry.AddSystem<SoundSystem>();
@@ -243,6 +245,7 @@ void Game::Update()
     _registry.GetSystem<ProjectileEmitSystem>().Update( _registry);
     _registry.GetSystem<LifecycleSystem>().Update();
     _registry.GetSystem<SoundSystem>().Update(_registry);
+    _registry.GetSystem<ScriptSystem>().Update();
 }
 
 void Game::Render()
