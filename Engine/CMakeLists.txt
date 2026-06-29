@@ -3,6 +3,7 @@
 add_library(Engine STATIC
     Logger/Logger.cpp
     
+    Game/LevelLoader.cpp
     Game/Game.cpp
     AssetStore/AssetStore.cpp 
     
