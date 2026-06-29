@@ -95,8 +95,8 @@ void LevelLoader::LoadLevel(sol::state& luaState, Registry& registry, SDL_Window
     sol::table map = level["tilemap"];
     std::string mapFilePath = map["map_file"];
     std::string mapTextureAssetId = map["texture_asset_id"];
-    int mapNumRows = map["num_rows"];
-    int mapNumCols = map["num_cols"];
+    int mapNumRows = map["texture_num_rows"];
+    int mapNumCols = map["texture_num_cols"];
     double mapScale = map["scale"];
     // Open tilemap data (grid of tile indices)
     std::ifstream file("./Assets/Tilemaps/jungle.map");

@@ -99,8 +99,10 @@ level = {
     tilemap = {
         map_file = "./assets/tilemaps/jungle.map",
         texture_asset_id = map_texture_asset_id,
-        num_rows = 3,
-        num_cols = 10,
+        texture_num_rows = 3,
+        texture_num_cols = 10,
+        map_num_rows = 20,
+        map_num_cols = 25,
         tile_size = 32,
         scale = 2.0
     },
@@ -3080,7 +3082,7 @@ level = {
                     rotation = 0.0, -- degrees
                 },
                 rigidbody = {
-                    velocity = { x = 0.0, y = -50.0 }
+                    velocity = { x = 0.0, y = -250.0 }
                 },
                 sprite = {
                     texture_asset_id = "su27-texture",
@@ -3118,13 +3120,13 @@ level = {
                     [0] =
                     function(entity, delta_time, ellapsed_time)
                         print("Executing the SU-27 fighter jet Lua script!")
-                        --[[
+
                         -- this function makes the fighter jet move up and down the map shooting projectiles
                         local current_position_x, current_position_y = get_position(entity)
                         local current_velocity_x, current_velocity_y = get_velocity(entity)
 
                         -- if it reaches the top or the bottom of the map
-                        if current_position_y < 10  or current_position_y > map_height - 32 then
+                        if current_position_y < 64 or current_position_y > map_height - 64 then
                             set_velocity(entity, 0, current_velocity_y * -1); -- flip the entity y-velocity
                         else
                             set_velocity(entity, 0, current_velocity_y); -- do not flip y-velocity
@@ -3138,7 +3140,6 @@ level = {
                             set_rotation(entity, 180) -- point down
                             set_projectile_velocity(entity, 0, 200) -- shoot projectiles down
                         end
-                        --]]
                     end
                 }
             }
@@ -3204,5 +3205,5 @@ level = {
 }
 
 -- Define some useful global variables
-map_width = level.tilemap.num_cols * level.tilemap.tile_size * level.tilemap.scale
-map_height = level.tilemap.num_rows * level.tilemap.tile_size * level.tilemap.scale
+map_width = level.tilemap.map_num_cols * level.tilemap.tile_size * level.tilemap.scale
+map_height = level.tilemap.map_num_rows * level.tilemap.tile_size * level.tilemap.scale
